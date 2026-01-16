@@ -1,0 +1,9 @@
+how do i check servers on anyport and stop all the server on linux terminal
+>  ss -tulpn
+
+Kill
+
+pkill -f python
+
+fuser -k 8080/tcp
+
