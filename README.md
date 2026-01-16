@@ -7,3 +7,4 @@ SO, here is the Python Books that i'm using to learn pyhton recently: https://dr
 The usefull Website Links: https://docs.google.com/spreadsheets/d/1tyXMiOC7uva652ibgUSiyT6jmHwRAcc59dBfC_1GhHc/edit?usp=sharing
 
 My wikipidea Ranking - https://meta.wikimedia.org/wiki/Global_statistics/Rank_data/bnwiki
+today - Jan 16 - 2026 - 1447	NotNahid	20231104062559	153
