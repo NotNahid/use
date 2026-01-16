@@ -33,3 +33,351 @@ Move that shortcut into the Startup folder you just opened.
 > If you haven't installed Cloudflare yet, run this in PowerShell (Run as Administrator):
 > winget install Cloudflare.cloudflared
 > cloudflared tunnel --url http://localhost:8080
+
+
+
+
+make public more ways:
+
+
+
+ls
+gemini
+ls
+LS
+ls
+cd 
+ls
+cd ..
+ls
+cd ..
+ls
+cd PowerToys
+ls
+export GOOGLE_CLOUD_PROJECT="ancient-sandbox-479504-r8"
+ls
+export GOOGLE_CLOUD_PROJECT="YOUR_PROJECT_ID"
+export GOOGLE_CLOUD_PROJECT="ancient-sandbox-479504-r8"
+ls
+#!/bin/bash
+# --- Start of Script ---
+# 1. Create a project directory and move into it
+echo "Step 1: Creating project directory 'cloudinary-script'..."
+mkdir -p cloudinary-script
+cd cloudinary-script
+# 2. Set up the Node.js project and install libraries
+echo "Step 2: Setting up Node.js project and installing libraries..."
+npm init -y > /dev/null 2>&1
+npm install cloudinary dotenv > /dev/null 2>&1
+# 3. Create the .env file with your specific credentials
+echo "Step 3: Creating .env file with your Cloudinary credentials..."
+cat << 'EOF' > .env
+CLOUDINARY_CLOUD_NAME="da54i7wj7"
+CLOUDINARY_API_KEY="898813299117645"
+CLOUDINARY_API_SECRET="vvJABEnNEkiRZ35e0zQBcUFAwt4"
+EOF
+
+# 4. Create the app.js script
+echo "Step 4: Creating the app.js script..."
+cat << 'EOF' > app.js
+// 1. Environment Setup: Load environment variables from .env file
+require('dotenv').config();
+const cloudinary = require('cloudinary').v2;
+const fs = require('fs');
+
+// 2. Security: Configure Cloudinary with credentials from environment variables
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+  secure: true,
+});
+
+// 3. Image Fetching and Link Generation
+async function generateImageLinksFile() {
+  console.log('Fetching images from Cloudinary...');
+  try {
+    const searchResult = await cloudinary.search
+      .expression('') // Get all images
+      .sort_by('public_id', 'desc')
+      .max_results(500)
+      .execute();
+
+    console.log(`${searchResult.resources.length} images found.`);
+
+    // 4. Optimization: Generate optimized URLs
+    const imageUrls = searchResult.resources.map(image => {
+      const optimizedUrl = cloudinary.url(image.public_id, {
+        fetch_format: 'auto',
+        quality: 'auto',
+        secure: true
+      });
+      return optimizedUrl;
+    }).join('\n');
+
+    // 5. File Generation: Write the URLs to a text file
+    fs.writeFileSync('cloudinary_links.txt', imageUrls);
+    console.log('Successfully created cloudinary_links.txt!');
+
+  } catch (error) {
+    console.error('Error fetching images or creating file:', error);
+  }
+}
+
+generateImageLinksFile();
+EOF
+
+# 5. Run the script to generate the links
+echo "Step 5: Running the script to generate cloudinary_links.txt..."
+node app.js
+# --- Final Message ---
+echo ""
+echo "------------------------------------------------------------------"
+echo "All done! Your 'cloudinary_links.txt' file has been created"
+echo "in the 'cloudinary-script' directory with your image URLs."
+echo ""
+echo "You can refresh this file anytime by running 'node app.js' "
+echo "from within the 'cloudinary-script' directory."
+echo "------------------------------------------------------------------"
+# --- End of Script ---
+ls
+cd cloudinary-script
+ls
+cat cloudinary_links.txt
+clear
+node app.js
+ls
+du -df
+du -h
+du --h
+du -help
+'du --help'
+du help
+du
+clear
+los
+ls
+# 1. Move the file up one level to safe keeping
+mv README-cloudshell.txt ..
+# 2. Delete everything in the current folder
+rm -rf *
+# 3. Bring the file back
+mv ../README-cloudshell.txt .
+shopt -s extglob
+rm -rf !(README-cloudshell.txt)
+ls
+hi
+ls
+# Update package lists
+sudo apt-get update
+# Clone the repository
+git clone https://github.com/beefproject/beef
+# Enter the directory
+cd beef
+# Run the installer (Type 'y' for all prompts)
+./install
+ls
+./beef
+cd beef
+./beef
+ls
+git clone https://github.com/techchipnet/CamPhish
+cd CamPhish
+bash camphish.sh
+cd CamPhish
+ls
+cd ..
+ls
+git clone https://github.com/trustedsec/social-engineer-toolkit/ setoolkit/
+cd setoolkit
+pip3 install -r requirements.txt
+python setup.py
+pip3 install -r requirements.txt
+python setup.py
+sudo seotoolkit
+cleart
+clear
+ls
+cd setoolkit
+sudo setoolkit
+which nahid.pdf
+sudo find / -name nahid.pdf
+ifconfig
+ls
+sudo cp /root/.set/nahid.pdf .
+ls
+sudo find / -name nahid2.pdf
+sudo cp /root/.set/nahid2.pdf .
+ifconfig
+wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+unzip ngrok-stable-linux-amd64.zip
+./ngrok tcp 4444
+./ngrok config add-authtoken 37YnaBCH3cZZjoine1hGVWYg7z8_38nsvDqXZYDrjxHkvccMu
+./ngrok authtoken 37YnaBCH3cZZjoine1hGVWYg7z8_38nsvDqXZYDrjxHkvccMu
+wget https://bin.equinox.io/c/4VmDzA7iaHb/ngrok-stable-linux-amd64.zip
+unzip ngrok-stable-linux-amd64.zip
+./ngrok tcp 4444
+# Remove old versions and zips
+rm -rf ngrok ngrok-stable-linux-amd64.zip ngrok-v3-stable-linux-amd64.tgz
+# Download the new v3 version
+wget https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-linux-amd64.tgz
+# Unzip the new version
+tar -xvzf ngrok-v3-stable-linux-amd64.tgz
+# Make it executable
+chmod +x ngrok
+./ngrok config add-authtoken 37YnaBCH3cZZjoine1hGVWYg7z8_38nsvDqXZYDrjxHkvccMu
+./ngrok tcp 4444
+ls
+cd setoolkit
+sudo setoolkit
+run setoolkit
+setoolkit
+cd setoolkit
+msfconsole
+sudo python3 setoolkit
+sudo python3 setoolkit
+sudo cp /root/.set/reports/qrcode_attack.png ~/qrcode_attack.png
+6
+GEMINI
+ls
+cd device-activity-tracker
+ls
+cd client && npm install
+cd device-activity-tracker && npm install 
+cd client && npm install
+cd ..
+cd client && npm install
+npm audit fix --force
+# Terminal 1: Start backend
+npm run start:server
+# Terminal 2: Start frontend
+npm run start:client
+# Terminal 1: Start backend
+npm run start:server
+# Terminal 2: Start frontend
+npm run start:client
+gemini
+nano
+ls
+nano
+ls
+nano stats.py
+python stats.py
+nano stats.py
+python stats.py
+python1 stats.py
+python2 stats.py
+pyhton stats.py
+python stats.py
+nano maker.py
+python3 maker.py
+nano maker.py
+python3 maker.py
+ls
+python -run index.html --8080
+python -h
+cleart
+clear
+python -m http.server -8080
+python3 -m http.server -8080
+python3 -m http.server - 8080
+python -m http.server 8080
+echo "this is a test.?" > sec.txt  
+ls
+python -m http.server 8080
+nano monitor.py
+ls
+python monitor.py
+nano monitor.py
+ls
+rm monitor.py
+ls
+nano monitor.py
+ls
+python monitor.py
+ls
+car index.html
+cat index.html
+ls
+pip install slack_sdk python-dotenv
+.env
+SLACK_BOT_TOKEN=xoxb-your-token-goes-here
+SLACK_CHANNEL=#general
+SLACK_BOT_TOKEN=xoxb-your-token-goes-here
+SLACK_CHANNEL=#general
+nano .env
+nano slack_test.py
+python slack_test.py
+ls
+cat .env
+nano .env
+python slack_test.py
+nano bot.py
+python bot.py
+ls
+ls -h
+nano .env
+pip install slack_bolt
+nano m.py
+python m.py
+nano requirements.txt
+nano main.py
+nano Dockerfile
+gcloud services enable cloudbuild.googleapis.com run.googleapis.com
+gcloud projects list
+gcloud config set project ancient-sandbox-479504-r8
+gcloud services enable cloudbuild.googleapis.com run.googleapis.com
+ls
+df -u
+df -h
+ls
+index.html
+ls
+pip install fastapi uvicorn
+nano main.py
+ls
+rm main.py
+ls
+nano main.py
+uvicorn main:app --host 0.0.0.0 --port 8080 --reload
+python -m http.server --bind 0.0.0.0 8080
+curl -fsSL https://pkg.cloudflareclient.com/pubkey.gpg | sudo gpg --yes --dearmor --output /usr/share/keyrings/cloudflare-warp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/cloudflare-warp-archive-keyring.gpg] 
+sudo apt-get update && sudo apt-get install cloudflare-warp
+
+# 1. Download the installation package
+curl -L --output cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb
+# 2. Install it using sudo
+sudo dpkg -i cloudflared.deb
+cloudflair --version
+cloudflaired --version
+cloudflared --version
+cloudflared tunnel --url http://localhost:8080
+curl -I https://precipitation-formatting-applications-excellent.trycloudflare.com
+echo '<h1>Hello from Google Cloud Shell!</h1><p>My Tunnel is working.</p>' > index.html
+ls
+rm index.html
+curl ipv4.icanhazip.com
+ssh -R 80:localhost:8080 serveo.net
+# Install it (requires npm)
+npm install -g localtunnel
+# Run it
+lt --port 8080
+npm -install -g localtunnel
+sudo lsof -i -P -n | grep LISTEN
+python3   1234  root    3u  IPv4  99999  0t0  TCP *:8080 (LISTEN)
+ssh -p 443 -R0:localhost:8080 a.pinggy.io
+fuser -k 8080/tcp
+python3 -m http.server --bind 0.0.0.0 8080
+ss -tulpn
+kill 1234
+kill 8080
+ss -tulpn
+pkill -f python
+ss -tulpn
+pkill -f python
+fuser -k 8080/tcp
+ss -tulpn
+pkill -f python
+python -m http.server 8080
+nano server.py
