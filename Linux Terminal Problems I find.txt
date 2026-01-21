@@ -17,3 +17,5 @@ In Cloud Shell, type {
 To Delete remove files multiple files:
 rm *.csv
 ls *.csv
+use the -i flag. It will ask you for confirmation for every single file:
+rm -i *.csv
