@@ -13,3 +13,7 @@ Download your script
 In Cloud Shell, type {
 > dl final_chat.py 
 (or use the download menu).
+
+To Delete remove files multiple files:
+rm *.csv
+ls *.csv
