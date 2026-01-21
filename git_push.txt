@@ -1,0 +1,15 @@
+# Clone your GitHub repo
+git clone https://github.com/NotNahid/slack.git
+cd slack
+
+# Make directories
+mkdir scripts
+
+# Save the JS file
+# (Paste slack-delete-helper.js into scripts/ folder)
+nano scripts/slack-delete-helper.js
+
+# Add README, LICENSE, .gitignore (already prepared)
+git add .
+git commit -m "Initial commit: Slack hover-delete helper script"
+git push origin main
