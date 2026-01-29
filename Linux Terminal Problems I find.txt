@@ -1,3 +1,7 @@
+cat << 'EOF' > proxy_request.py
+import request
+
+
 readlink -f InstrumentSerif-Regular.ttf  
 
 readlink -f InstrumentSerif-Regular.ttf
