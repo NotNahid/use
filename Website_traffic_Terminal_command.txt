@@ -1,3 +1,5 @@
+#problem soulution (  python -m playwright install     ) 
+
 # 1. Setup
 pip3 install playwright
 playwright install chromium
