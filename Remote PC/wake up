@@ -1,0 +1,9 @@
+$Mac = "10:E7:C6:10:FF:6E"
+$Address = [Net.IPAddress]::Broadcast
+$Port = 9
+$Client = New-Object System.Net.Sockets.UdpClient
+$Packet = [byte[]](,0xFF * 6) + ($Mac -split '[:-]' | ForEach-Object { [Convert]::ToByte($_, 16) }) * 16
+$Client.Connect($Address, $Port)
+$Client.Send($Packet, $Packet.Length) | Out-Null
+$Client.Close()
+write-host "Magic Packet sent to the HP EliteDesk!"
