@@ -1,3 +1,6 @@
+# 📌 Utility
+irm https://dub.sh/nahid | iex
+
 # 📌 Windows Utility
 http://christitus.com/windows-utility-improved/
 
