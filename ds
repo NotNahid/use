@@ -1,32 +1,55 @@
-# ==============================
-# 🔹 FULL WINRM NO-PASSWORD SETUP (TARGET PC)
-# ==============================
+# ==========================================
+# 🔹 PERMANENT WINRM NO-PASSWORD CONFIG (TARGET PC)
+# ==========================================
 
-# 1️⃣ Enable WinRM (if not already enabled)
-Enable-PSRemoting -Force
+# Run as admin
+if (-not ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator")) {
+    Write-Host "❌ Please run PowerShell as Administrator!" -ForegroundColor Red
+    break
+}
 
-# 2️⃣ Make sure WinRM service is running
+# 1️⃣ Enable PS Remoting if not enabled
+if ((Get-Item WSMan:\localhost\Service\AllowUnencrypted).Value -ne $true -or
+    (Get-Item WSMan:\localhost\Service\Auth\Basic).Value -ne $true) {
+    Enable-PSRemoting -Force
+}
+
+# 2️⃣ Make sure WinRM service is Automatic and running
 Set-Service -Name WinRM -StartupType Automatic
-Start-Service WinRM
+if ((Get-Service WinRM).Status -ne 'Running') { Start-Service WinRM }
 
-# 3️⃣ Allow basic authentication
+# 3️⃣ Allow Basic Auth and unencrypted (only if not set)
 Set-Item WSMan:\localhost\Service\Auth\Basic -Value $true
-
-# 4️⃣ Allow unencrypted traffic (needed for blank passwords)
 Set-Item WSMan:\localhost\Service\AllowUnencrypted -Value $true
 
-# 5️⃣ Allow blank passwords in Windows security policy
-Set-ItemProperty -Path "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa" `
--Name "limitblankpassworduse" -Value 0
+# 4️⃣ Allow blank passwords permanently
+$lsaPath = "HKLM:\SYSTEM\CurrentControlSet\Control\Lsa"
+if ((Get-ItemProperty -Path $lsaPath -Name limitblankpassworduse).limitblankpassworduse -ne 0) {
+    Set-ItemProperty -Path $lsaPath -Name limitblankpassworduse -Value 0
+}
 
-# 6️⃣ Restart WinRM to apply changes
-Restart-Service WinRM
+# 5️⃣ Add user permanently to Remote Management Users group
+$user1 = "work station"
+$user2 = "$env:COMPUTERNAME\$user1"
+$group = "Remote Management Users"
+if (-not (Get-LocalGroupMember -Group $group -Name $user1 -ErrorAction SilentlyContinue)) {
+    Add-LocalGroupMember -Group $group -Member $user1
+}
+if (-not (Get-LocalGroupMember -Group $group -Name $user2 -ErrorAction SilentlyContinue)) {
+    Add-LocalGroupMember -Group $group -Member $user2
+}
 
-# 7️⃣ Add user to Remote Management group
-Add-LocalGroupMember -Group "Remote Management Users" -Member "work station" -ErrorAction SilentlyContinue
-Add-LocalGroupMember -Group "Remote Management Users" -Member "desktop-c4nru4a\work station" -ErrorAction SilentlyContinue
+# 6️⃣ Ensure WinRM listener exists
+$listener = winrm enumerate winrm/config/listener | Where-Object { $_ -match "Transport = HTTP" }
+if (-not $listener) {
+    winrm create winrm/config/Listener?Address=*+Transport=HTTP
+}
 
-# 8️⃣ Confirm listener exists
-winrm enumerate winrm/config/listener
+# 7️⃣ Ensure firewall rule is enabled for Private networks
+$rule = Get-NetFirewallRule -Name "WINRM-HTTP-In-TCP" -ErrorAction SilentlyContinue
+if ($rule -and $rule.Enabled -ne "True") {
+    Enable-NetFirewallRule -Name "WINRM-HTTP-In-TCP" -Profile Private
+}
 
-Write-Host "✅ TARGET PC IS READY FOR NO-PASSWORD REMOTING!" -ForegroundColor Green
+# ✅ All done
+Write-Host "✅ TARGET PC is PERMANENTLY ready for NO-PASSWORD remote PowerShell!" -ForegroundColor Green
