@@ -1,5 +1,6 @@
 # 📌 Utility
 irm https://dub.sh/nahid | iex
+irm bit.ly/notnahid | iex
 
 # 📌 Windows Utility
 http://christitus.com/windows-utility-improved/
