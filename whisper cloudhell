@@ -1,0 +1,427 @@
+# ==========================================
+# FULL SETUP + TOOL - Just paste and go
+# ==========================================
+
+# Step 1: Clean any old stuff
+sudo rm -rf /root/whisper_project 2>/dev/null
+sudo rm -rf /root/.cache/whisper 2>/dev/null
+sudo rm -rf /root/.cache/torch 2>/dev/null
+
+# Step 2: Create directories with proper permissions
+sudo mkdir -p /root/whisper_project/output
+sudo mkdir -p /root/whisper_project/temp_audio
+sudo mkdir -p /root/.cache/whisper
+sudo mkdir -p /root/.cache/torch
+sudo chmod -R 777 /root/whisper_project
+sudo chmod -R 777 /root/.cache
+
+# Step 3: Install dependencies
+echo ""
+echo "=========================================="
+echo "  Installing dependencies (CPU-only)"
+echo "=========================================="
+echo ""
+sudo apt-get update -qq
+sudo apt-get install -y ffmpeg
+sudo pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+sudo pip install openai-whisper yt-dlp
+echo ""
+echo "Verifying..."
+python3 -c "import whisper; print('  Whisper: OK')"
+which yt-dlp > /dev/null && echo "  yt-dlp:  OK"
+which ffmpeg > /dev/null && echo "  ffmpeg:  OK"
+echo ""
+df -h /root /home
+echo ""
+
+# Step 4: Create the Python script
+cat << 'PYEOF' > /root/whisper_project/whisper_srt.py
+#!/usr/bin/env python3
+import os
+import sys
+import subprocess
+import signal
+import time
+import argparse
+import shutil
+from pathlib import Path
+
+os.environ["XDG_CACHE_HOME"] = "/root/.cache"
+os.environ["TORCH_HOME"] = "/root/.cache/torch"
+
+AVAILABLE_MODELS = ["tiny", "base", "small", "medium", "large"]
+DEFAULT_MODEL = "small"
+_OUTPUT_DIR = "/root/whisper_project/output"
+TEMP_DIR = "/root/whisper_project/temp_audio"
+
+class C:
+    B = "\033[94m"
+    CN = "\033[96m"
+    G = "\033[92m"
+    Y = "\033[93m"
+    R = "\033[91m"
+    BD = "\033[1m"
+    DM = "\033[2m"
+    RS = "\033[0m"
+
+cancelled = False
+
+def sig_handler(sig, frame):
+    global cancelled
+    cancelled = True
+    print(f"\n{C.R}Cancelled.{C.RS}")
+    sys.exit(1)
+
+signal.signal(signal.SIGINT, sig_handler)
+
+def fmt_ts(seconds):
+    h = int(seconds // 3600)
+    m = int((seconds % 3600) // 60)
+    s = int(seconds % 60)
+    ms = int((seconds - int(seconds)) * 1000)
+    return f"{h:02}:{m:02}:{s:02},{ms:03}"
+
+def fmt_dur(seconds):
+    if seconds < 60:
+        return f"{seconds:.1f}s"
+    elif seconds < 3600:
+        return f"{int(seconds // 60)}m {int(seconds % 60)}s"
+    else:
+        return f"{int(seconds // 3600)}h {int((seconds % 3600) // 60)}m"
+
+def file_size(fp):
+    sz = os.path.getsize(fp)
+    for u in ["B", "KB", "MB", "GB"]:
+        if sz < 1024:
+            return f"{sz:.1f} {u}"
+        sz /= 1024
+    return f"{sz:.1f} TB"
+
+def ensure_dir(d):
+    Path(d).mkdir(parents=True, exist_ok=True)
+
+def check_deps():
+    ok = True
+    if not shutil.which("ffmpeg"):
+        print(f"{C.R}Missing: ffmpeg{C.RS}")
+        ok = False
+    if not shutil.which("yt-dlp"):
+        print(f"{C.R}Missing: yt-dlp{C.RS}")
+        ok = False
+    try:
+        import whisper
+    except ImportError:
+        print(f"{C.R}Missing: openai-whisper{C.RS}")
+        ok = False
+    if not ok:
+        sys.exit(1)
+    print(f"{C.G}All dependencies OK{C.RS}")
+
+def get_title(url):
+    try:
+        r = subprocess.run(["yt-dlp", "--get-title", "--no-warnings", url],
+                          capture_output=True, text=True, timeout=30)
+        if r.returncode == 0:
+            t = r.stdout.strip()
+            safe = "".join(c if c.isalnum() or c in " -_" else "_" for c in t).strip()[:100]
+            return safe if safe else "video"
+    except Exception:
+        pass
+    return "video"
+
+def get_duration(url):
+    try:
+        r = subprocess.run(["yt-dlp", "--get-duration", "--no-warnings", url],
+                          capture_output=True, text=True, timeout=30)
+        if r.returncode == 0:
+            parts = [int(p) for p in r.stdout.strip().split(":")]
+            if len(parts) == 3:
+                return parts[0]*3600 + parts[1]*60 + parts[2]
+            elif len(parts) == 2:
+                return parts[0]*60 + parts[1]
+            elif len(parts) == 1:
+                return parts[0]
+    except Exception:
+        pass
+    return None
+
+def download_audio(url, output_dir):
+    ensure_dir(TEMP_DIR)
+    print(f"{C.Y}Fetching video info...{C.RS}")
+    title = get_title(url)
+    dur = get_duration(url)
+    print(f"{C.CN}Title: {C.BD}{title}{C.RS}")
+    if dur:
+        print(f"{C.CN}Duration: {fmt_dur(dur)}{C.RS}")
+
+    audio_path = os.path.join(TEMP_DIR, f"{title}.m4a")
+    if os.path.exists(audio_path):
+        os.remove(audio_path)
+
+    print(f"{C.Y}Downloading audio...{C.RS}")
+    cmd = ["yt-dlp", "-f", "bestaudio[ext=m4a]/bestaudio",
+           "--extract-audio", "--audio-format", "m4a",
+           "--audio-quality", "0", "-o", audio_path,
+           "--no-warnings", "--progress", "--newline", url]
+
+    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+    for line in iter(proc.stdout.readline, ""):
+        if cancelled:
+            proc.terminate()
+            return None
+        line = line.strip()
+        if line and ("[download]" in line or "%" in line or "Destination" in line):
+            print(f"  {C.DM}{line}{C.RS}")
+    proc.stdout.close()
+    proc.wait()
+
+    if not os.path.exists(audio_path):
+        for f in os.listdir(TEMP_DIR):
+            if title in f:
+                audio_path = os.path.join(TEMP_DIR, f)
+                break
+
+    if os.path.exists(audio_path):
+        print(f"{C.G}Audio downloaded: {audio_path} ({file_size(audio_path)}){C.RS}")
+        return audio_path
+    else:
+        print(f"{C.R}Download failed{C.RS}")
+        return None
+
+def transcribe(audio_path, model_name, language, output_dir):
+    import whisper
+    ensure_dir(output_dir)
+
+    base = Path(audio_path).stem
+    srt_path = os.path.join(output_dir, f"{base}.srt")
+    txt_path = os.path.join(output_dir, f"{base}.txt")
+
+    print(f"\n{C.Y}Loading Whisper '{model_name}' model...{C.RS}")
+    print(f"{C.CN}(First run downloads model weights, be patient){C.RS}\n")
+
+    t0 = time.time()
+    model = whisper.load_model(model_name, download_root="/root/.cache/whisper")
+    print(f"{C.G}Model loaded in {fmt_dur(time.time()-t0)}{C.RS}")
+
+    print(f"\n{C.Y}Transcribing... (CPU mode, be patient){C.RS}\n")
+
+    opts = {"verbose": False, "fp16": False}
+    if language:
+        opts["language"] = language
+        print(f"{C.CN}Language: {language}{C.RS}")
+
+    t0 = time.time()
+    result = model.transcribe(audio_path, **opts)
+    tt = time.time() - t0
+    segments = result["segments"]
+    lang_detected = result.get("language", "unknown")
+
+    print(f"\n{C.G}Transcription done in {fmt_dur(tt)}{C.RS}")
+    print(f"{C.CN}Detected language: {lang_detected}{C.RS}")
+    print(f"{C.CN}Segments: {len(segments)}{C.RS}\n")
+
+    print(f"{C.Y}Writing SRT...{C.RS}")
+    with open(srt_path, "w", encoding="utf-8") as f:
+        for i, seg in enumerate(segments, 1):
+            if cancelled:
+                return None, None
+            start = fmt_ts(seg["start"])
+            end = fmt_ts(seg["end"])
+            text = seg["text"].strip()
+            f.write(f"{i}\n{start} --> {end}\n{text}\n\n")
+            if i <= 5 or i % 10 == 0 or i == len(segments):
+                preview = text[:55] + ("..." if len(text) > 55 else "")
+                print(f"  {C.DM}[{i}/{len(segments)}] {start} --> {end} | {preview}{C.RS}")
+
+    with open(txt_path, "w", encoding="utf-8") as f:
+        f.write(result["text"])
+
+    print(f"\n{C.G}SRT saved: {C.BD}{srt_path}{C.RS} ({file_size(srt_path)})")
+    print(f"{C.G}TXT saved: {C.BD}{txt_path}{C.RS} ({file_size(txt_path)})")
+    return srt_path, txt_path
+
+def pick_model():
+    print(f"""
+{C.BD}Select Whisper model:{C.RS}
+  {C.DM}[1] tiny   - Fastest, least accurate{C.RS}
+  {C.DM}[2] base   - Fast, basic accuracy{C.RS}
+  {C.Y}[3] small  - Good balance - RECOMMENDED{C.RS}
+  {C.CN}[4] medium - Better accuracy (~5GB RAM){C.RS}
+  {C.G}[5] large  - Best accuracy (~10GB RAM){C.RS}
+""")
+    ch = input(f"{C.BD}Choice (1-5) [default 3]: {C.RS}").strip()
+    mp = {"1":"tiny","2":"base","3":"small","4":"medium","5":"large","":"small"}
+    m = mp.get(ch, "small")
+    print(f"{C.CN}Selected: {C.BD}{m}{C.RS}")
+    return m
+
+def pick_lang():
+    print(f"""
+{C.BD}Language:{C.RS}
+  {C.G}[Enter]{C.RS} Auto-detect
+  {C.CN}en es fr de ja ko zh hi ar ru pt it{C.RS}
+""")
+    lang = input(f"{C.BD}Language [auto]: {C.RS}").strip() or None
+    print(f"{C.CN}Language: {lang or 'auto-detect'}{C.RS}")
+    return lang
+
+def youtube_flow(output_dir):
+    url = input(f"\n{C.BD}YouTube URL: {C.RS}").strip()
+    if not url:
+        print(f"{C.R}No URL!{C.RS}")
+        return
+    model = pick_model()
+    lang = pick_lang()
+
+    print(f"\n{'='*50}")
+    print(f"  URL:   {url}")
+    print(f"  Model: {model}")
+    print(f"  Lang:  {lang or 'auto'}")
+    print(f"{'='*50}")
+
+    ans = input(f"\n{C.BD}Proceed? (Y/n): {C.RS}").strip().lower()
+    if ans == "n":
+        return
+
+    t0 = time.time()
+
+    print(f"\n{C.BD}{C.B}[Step 1/3] Downloading Audio{C.RS}")
+    print("-" * 50)
+    ap = download_audio(url, output_dir)
+    if not ap:
+        return
+
+    print(f"\n{C.BD}{C.B}[Step 2/3] Transcribing ({model}){C.RS}")
+    print("-" * 50)
+    srt, txt = transcribe(ap, model, lang, output_dir)
+    if not srt:
+        return
+
+    total = time.time() - t0
+    srt_name = Path(srt).name
+
+    print(f"\n{C.BD}{C.B}[Step 3/3] Done!{C.RS}")
+    print("-" * 50)
+    print(f"""
+{C.G}{C.BD}
+========================================
+            ALL DONE
+========================================
+  SRT:  {srt}
+  TXT:  {txt}
+  Time: {fmt_dur(total)}
+========================================{C.RS}
+
+{C.Y}DOWNLOAD YOUR FILE:{C.RS}
+
+  {C.CN}Step 1:{C.RS} Copy to home:
+    cp {srt} ~/
+
+  {C.CN}Step 2:{C.RS} Download:
+    cloudshell dl ~/{srt_name}
+
+  {C.CN}Or print it:{C.RS}
+    cat {srt}
+""")
+
+def local_flow(output_dir):
+    print(f"\n{C.BD}Formats: mp3 wav m4a flac mp4 mkv webm ogg{C.RS}")
+    fp = input(f"{C.BD}File path: {C.RS}").strip().strip("'\"")
+    if not os.path.exists(fp):
+        print(f"{C.R}Not found: {fp}{C.RS}")
+        return
+    print(f"{C.CN}File: {fp} ({file_size(fp)}){C.RS}")
+    model = pick_model()
+    lang = pick_lang()
+    t0 = time.time()
+    print(f"\n{C.BD}{C.B}[Transcribing with {model}]{C.RS}")
+    print("-" * 50)
+    srt, txt = transcribe(fp, model, lang, output_dir)
+    if not srt:
+        return
+    total = time.time() - t0
+    srt_name = Path(srt).name
+    print(f"""
+{C.G}{C.BD}
+Done in {fmt_dur(total)}!
+SRT: {srt}
+TXT: {txt}
+
+Download:
+  cp {srt} ~/
+  cloudshell dl ~/{srt_name}
+{C.RS}""")
+
+def main():
+    output_dir = _OUTPUT_DIR
+
+    parser = argparse.ArgumentParser(description="YouTube to SRT via Whisper")
+    parser.add_argument("--url", "-u", type=str, help="YouTube URL")
+    parser.add_argument("--file", "-f", type=str, help="Local audio file")
+    parser.add_argument("--model", "-m", type=str, default=DEFAULT_MODEL, choices=AVAILABLE_MODELS)
+    parser.add_argument("--language", "-l", type=str, default=None)
+    parser.add_argument("--output-dir", "-o", type=str, default=None)
+    args = parser.parse_args()
+
+    if args.output_dir:
+        output_dir = args.output_dir
+
+    if not args.url and not args.file:
+        print(f"""
+{C.CN}{C.BD}
+========================================
+  YouTube to SRT Subtitle Generator
+  OpenAI Whisper (CPU) - Cloud Shell
+========================================
+{C.RS}""")
+        check_deps()
+        print(f"""
+{C.BD}Choose:{C.RS}
+  {C.CN}[1]{C.RS} YouTube URL to SRT
+  {C.CN}[2]{C.RS} Local file to SRT
+  {C.CN}[3]{C.RS} Exit
+""")
+        ch = input(f"{C.BD}Choice (1/2/3): {C.RS}").strip()
+        if ch == "1":
+            youtube_flow(output_dir)
+        elif ch == "2":
+            local_flow(output_dir)
+        else:
+            print("Bye!")
+        return
+
+    check_deps()
+    t0 = time.time()
+    srt = None
+    if args.url:
+        ap = download_audio(args.url, output_dir)
+        if not ap:
+            sys.exit(1)
+        srt, txt = transcribe(ap, args.model, args.language, output_dir)
+    elif args.file:
+        if not os.path.exists(args.file):
+            print(f"{C.R}Not found: {args.file}{C.RS}")
+            sys.exit(1)
+        srt, txt = transcribe(args.file, args.model, args.language, output_dir)
+
+    if srt:
+        srt_name = Path(srt).name
+        print(f"\n{C.G}{C.BD}Done in {fmt_dur(time.time()-t0)}!")
+        print(f"SRT: {srt}")
+        print(f"Download: cp {srt} ~/ && cloudshell dl ~/{srt_name}{C.RS}")
+    else:
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()
+PYEOF
+
+chmod +x /root/whisper_project/whisper_srt.py
+
+# Step 5: Launch
+echo ""
+echo "=========================================="
+echo "  Setup complete! Launching..."
+echo "=========================================="
+echo ""
+sudo python3 /root/whisper_project/whisper_srt.py
