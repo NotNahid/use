@@ -12,3 +12,4 @@ npx playwright install firefox
 
 # Then run
 node yt_stealth.js
+<img width="800" height="776" alt="image" src="https://github.com/user-attachments/assets/d1ef92d5-71aa-4cac-b299-b9f6e16621d3" />
