@@ -1,5 +1,8 @@
+
 # 📌 Utility
 irm https://dub.sh/nahid | iex
+
+https://www.powershellgallery.com/packages/notnahid
 
 irm bit.ly/notnahid | iex
 
