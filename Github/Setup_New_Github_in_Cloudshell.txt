@@ -1,15 +1,24 @@
-cat << 'EOF' > git_tool.py
+cat << 'EOF' > ~/git_tool.py
 #!/usr/bin/env python3
 
 import os, sys, subprocess, time, getpass, json
-from colorama import Fore, init
+
+def install(pkg):
+    subprocess.check_call([sys.executable, "-m", "pip", "install", pkg, "-q"])
+
+try:
+    from colorama import Fore, init
+except ImportError:
+    print("📦 Installing colorama...")
+    install("colorama")
+    from colorama import Fore, init
+
 init(autoreset=True)
 
 CONFIG_FILE = os.path.expanduser("~/.git_gittool.json")
 
 def run(cmd):
-    result = os.system(cmd)
-    return result
+    return os.system(cmd)
 
 def ask(msg):
     while True:
@@ -51,22 +60,14 @@ def delete_config():
     if os.path.exists(CONFIG_FILE):
         os.remove(CONFIG_FILE)
 
-def git_root(path):
-    path = os.path.abspath(path)
-    while True:
-        if os.path.exists(os.path.join(path, ".git")):
-            return path
-        parent = os.path.dirname(path)
-        if parent == path:
-            return None
-        path = parent
+def has_git(path):
+    return os.path.exists(os.path.join(path, ".git"))
 
-def is_safe(path):
-    path = os.path.abspath(path)
-    unsafe = ["/", "/root", "/etc", "/usr", "/bin", "/sbin", "/var", "/sys", "/proc"]
-    if path in unsafe:
-        return False
-    return True
+def ensure_git(path):
+    if not has_git(path):
+        print(f"⚙️  No .git found — initializing repo in {path}")
+        os.system("git init -b main")
+        print("✅ Git initialized")
 
 def create_gitignore():
     content = """__pycache__/
@@ -101,33 +102,28 @@ def dashboard():
 def auth():
     cfg = load_config()
     print("\n🔐 AUTH SYSTEM")
-
     if cfg:
         print(f"👤 Saved user: {cfg['user']}")
         choice = ask("Use saved login? (yes/no/delete)")
-
         if choice == "yes":
             return cfg
         if choice == "delete":
             delete_config()
             print("🗑️ Deleted saved login")
             return auth()
-
     user = ask("GitHub Username")
     email = ask("Email")
     token = ask_secret("GitHub Token (not shown again)")
-
     cfg = {"user": user, "email": email, "token": token}
     save_config(cfg)
     return cfg
 
-print("🚀 Git Tool v7 (Fixed)")
+print("🚀 Git Tool v9")
 
 cfg = auth()
 
 os.system(f'git config --global user.name "{cfg["user"]}"')
 os.system(f'git config --global user.email "{cfg["email"]}"')
-os.system(f'git config --global credential.helper store')
 
 print("\n📁 Project Setup")
 print("1) Current folder")
@@ -142,22 +138,18 @@ else:
 
 path = os.path.abspath(path)
 
-if not is_safe(path):
-    print("❌ Unsafe system path blocked")
+if not os.path.isdir(path):
+    print("❌ Folder does not exist")
     sys.exit()
 
-repo = git_root(path)
+os.chdir(path)
+ensure_git(path)
 
-if not repo:
-    print("❌ No git repository found")
-    sys.exit()
-
-os.chdir(repo)
 print(Fore.GREEN + f"\n📂 Repo: {os.getcwd()}")
 
 while True:
     clear()
-    print("🚀 Git Tool v7\n")
+    print("🚀 Git Tool v9\n")
     print(f"📂 {os.getcwd()}\n")
     print("📦 STATUS:")
     run("git status -s")
@@ -205,16 +197,16 @@ while True:
         run("git status")
         if ask("Type YES to deploy") != "YES":
             continue
-        if not os.path.exists(".git"):
-            run("git init -b main")
         run("git add .")
-        run('git commit -m "initial commit"')
+        msg = ask("Commit message")
+        msg = msg.replace('"', "'")
+        run(f'git commit -m "{msg}"')
         token = cfg["token"]
         user = cfg["user"]
         remote_url = f"https://{user}:{token}@github.com/{user}/{repo_name}.git"
         os.system(f'git remote add origin {remote_url} 2>/dev/null || git remote set-url origin {remote_url}')
         if ask("Type YES to push") == "YES":
-            result = os.system("git push -u origin main")
+            result = os.system("git push -u origin main --force")
             if result == 0:
                 print("🚀 Deployed successfully")
             else:
