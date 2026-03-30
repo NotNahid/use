@@ -43,7 +43,15 @@ Date: Jan 16, 2026
 - Rank: 1447  
 - Username: NotNahid  
 - User ID: 20231104062559  
-- Total Edits: 153  
+- Total Edits: 153
+
+- Project: Bengali Wikipedia  
+Date: March 30, 2026  
+
+- Rank: 572  
+- Username: NotNahid  
+- User ID: 20231104062559  
+- Total Edits: 702  
 
 https://meta.wikimedia.org/wiki/Global_statistics/Rank_data/bnwiki
 
