@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GIF Maker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gif.js/0.2.0/gif.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0e0e0f;
+    --surface: #1a1a1d;
+    --surface2: #242428;
+    --border: #2e2e34;
+    --accent: #7c6dfa;
+    --accent-dim: #3d3578;
+    --accent2: #fa6d9a;
+    --text: #e8e8f0;
+    --muted: #777786;
+    --danger: #ff4f6a;
+    --success: #3fd68b;
+    --radius: 12px;
+    --font: 'Inter', system-ui, sans-serif;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 40px 20px 80px;
+  }
+
+  /* ── Screens ── */
+  .screen { width: 100%; max-width: 860px; display: none; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* ── Back button ── */
+  .back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 8px;
+    padding: 6px 14px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    margin-bottom: 28px;
+    transition: color 0.15s, border-color 0.15s;
+    align-self: flex-start;
+  }
+  .back-btn:hover { color: var(--text); border-color: var(--accent); }
+
+  /* ══════════════════════════════════════════
+     HOME SCREEN
+  ══════════════════════════════════════════ */
+  #homeScreen {
+    align-items: center;
+    gap: 0;
+  }
+
+  .home-header {
+    text-align: center;
+    margin-bottom: 48px;
+  }
+  .home-header h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    margin-bottom: 8px;
+  }
+  .home-header p {
+    font-size: 0.9rem;
+    color: var(--muted);
+  }
+
+  .mode-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    width: 100%;
+  }
+
+  .mode-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 28px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+  .mode-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.2s;
+    pointer-events: none;
+  }
+  .mode-card.invert-card::before  { background: radial-gradient(ellipse at 20% 20%, rgba(124,109,250,0.12), transparent 60%); }
+  .mode-card.sequence-card::before { background: radial-gradient(ellipse at 20% 20%, rgba(250,109,154,0.12), transparent 60%); }
+  .mode-card:hover { transform: translateY(-2px); }
+  .mode-card.invert-card:hover   { border-color: var(--accent);  box-shadow: 0 0 0 1px var(--accent-dim); }
+  .mode-card.invert-card:hover::before  { opacity: 1; }
+  .mode-card.sequence-card:hover { border-color: var(--accent2); box-shadow: 0 0 0 1px rgba(250,109,154,0.3); }
+  .mode-card.sequence-card:hover::before { opacity: 1; }
+
+  .mode-card .card-icon {
+    font-size: 2.4rem;
+    line-height: 1;
+  }
+  .mode-card h2 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .mode-card p {
+    font-size: 0.82rem;
+    color: var(--muted);
+    line-height: 1.55;
+  }
+  .mode-card .card-arrow {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: auto;
+    transition: color 0.15s;
+  }
+  .mode-card.invert-card:hover   .card-arrow { color: var(--accent); }
+  .mode-card.sequence-card:hover .card-arrow { color: var(--accent2); }
+
+  /* ── demo strip ── */
+  .demo-strip {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+  .demo-strip span {
+    width: 28px;
+    height: 20px;
+    border-radius: 4px;
+    display: inline-block;
+  }
+
+  @media (max-width: 520px) {
+    .mode-cards { grid-template-columns: 1fr; }
+    .home-header h1 { font-size: 1.5rem; }
+  }
+
+  /* ══════════════════════════════════════════
+     SHARED TOOL STYLES
+  ══════════════════════════════════════════ */
+  .tool-header {
+    margin-bottom: 28px;
+  }
+  .tool-header h2 {
+    font-size: 1.4rem;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    margin-bottom: 4px;
+  }
+  .tool-header p { font-size: 0.85rem; color: var(--muted); }
+
+  .tool-body { display: flex; flex-direction: column; gap: 20px; }
+
+  /* Drop zone */
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 36px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s;
+    position: relative;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(124,109,250,0.05);
+  }
+  .drop-zone input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+  .drop-zone .dz-icon { font-size: 2rem; margin-bottom: 8px; }
+  .drop-zone p { font-size: 0.86rem; color: var(--muted); }
+  .drop-zone strong { color: var(--accent); }
+
+  /* Section label */
+  .section-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .section-label button {
+    font-size: 0.72rem;
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--danger);
+    border-radius: 6px;
+    padding: 3px 10px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .section-label button:hover { background: rgba(255,79,106,0.1); }
+
+  /* Frame items */
+  .frame-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    cursor: grab;
+    user-select: none;
+    transition: box-shadow 0.15s, opacity 0.15s, border-color 0.15s;
+  }
+  .frame-item:active { cursor: grabbing; }
+  .frame-item.dragging { opacity: 0.35; border-color: var(--accent); }
+  .frame-item.drag-target { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-dim); }
+
+  .frame-handle { color: var(--muted); font-size: 1.1rem; flex-shrink: 0; cursor: grab; }
+  .frame-index  { font-size: 0.72rem; font-weight: 700; color: var(--muted); width: 20px; text-align: right; flex-shrink: 0; }
+
+  .frame-thumb {
+    width: 56px; height: 42px;
+    object-fit: cover; border-radius: 6px;
+    flex-shrink: 0; background: var(--surface2);
+  }
+  .frame-name { font-size: 0.82rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .frame-dims { font-size: 0.72rem; color: var(--muted); }
+
+  .frame-delay-wrap { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+  .frame-delay-wrap label { font-size: 0.72rem; color: var(--muted); }
+  .frame-delay-wrap input[type=number] {
+    width: 64px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px;
+    padding: 4px 8px; font-size: 0.8rem; text-align: right;
+  }
+  .frame-delay-wrap input[type=number]:focus { outline: none; border-color: var(--accent); }
+  .frame-delay-wrap .ms-label { font-size: 0.72rem; color: var(--muted); }
+
+  .frame-remove {
+    background: none; border: none; color: var(--muted);
+    font-size: 1rem; cursor: pointer; padding: 4px;
+    border-radius: 6px; transition: color 0.15s, background 0.15s;
+    flex-shrink: 0; line-height: 1;
+  }
+  .frame-remove:hover { color: var(--danger); background: rgba(255,79,106,0.1); }
+
+  .empty-state { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 20px 0; }
+
+  /* Global delay row */
+  .global-delay-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 16px;
+    font-size: 0.85rem; flex-wrap: wrap;
+  }
+  .global-delay-row label { color: var(--muted); }
+  .global-delay-row input[type=range] { flex: 1; min-width: 120px; accent-color: var(--accent); }
+  .global-delay-row .val { color: var(--accent); font-weight: 600; min-width: 60px; }
+  .global-delay-row button {
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); border-radius: 6px; padding: 5px 12px;
+    font-size: 0.8rem; cursor: pointer; white-space: nowrap;
+    transition: border-color 0.15s;
+  }
+  .global-delay-row button:hover { border-color: var(--accent); }
+
+  /* Preview box */
+  .preview-box {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+    display: none; flex-direction: column;
+    align-items: center; gap: 12px;
+  }
+  .preview-box.visible { display: flex; }
+  .preview-label {
+    font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); width: 100%;
+  }
+  .preview-box img {
+    max-width: 100%; max-height: 320px;
+    border-radius: 8px; object-fit: contain;
+    background: var(--surface2);
+  }
+  .preview-counter { font-size: 0.78rem; color: var(--muted); }
+
+  /* Generate bar */
+  .generate-bar { display: flex; flex-direction: column; gap: 10px; }
+  .gen-btn {
+    width: 100%; padding: 14px;
+    border: none; border-radius: var(--radius);
+    color: #fff; font-size: 1rem; font-weight: 600;
+    cursor: pointer; transition: opacity 0.2s, transform 0.1s;
+    letter-spacing: -0.01em;
+  }
+  .gen-btn.purple { background: var(--accent); }
+  .gen-btn.pink   { background: var(--accent2); }
+  .gen-btn:hover:not(:disabled) { opacity: 0.88; }
+  .gen-btn:active:not(:disabled) { transform: scale(0.99); }
+  .gen-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  .prog-bar {
+    width: 100%; height: 6px;
+    border-radius: 99px; appearance: none;
+    background: var(--surface2); overflow: hidden;
+  }
+  .prog-bar::-webkit-progress-bar   { background: var(--surface2); border-radius: 99px; }
+  .prog-bar::-webkit-progress-value { background: var(--accent); border-radius: 99px; transition: width 0.1s; }
+  .prog-bar::-moz-progress-bar      { background: var(--accent); }
+
+  .status-text { font-size: 0.82rem; color: var(--muted); text-align: center; }
+  .status-text.ok { color: var(--success); }
+
+  /* ══════════════════════════════════════════
+     INVERT SCREEN specifics
+  ══════════════════════════════════════════ */
+  .invert-preview-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .invert-thumb-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .invert-thumb-box .itb-label {
+    font-size: 0.72rem; font-weight: 600;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--muted); width: 100%;
+  }
+  .invert-thumb-box img {
+    max-width: 100%; max-height: 220px;
+    border-radius: 6px; object-fit: contain;
+    background: var(--surface2);
+  }
+  .invert-dims { font-size: 0.72rem; color: var(--muted); }
+
+  .delay-row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+  .delay-row label { color: var(--muted); white-space: nowrap; }
+  .delay-row input[type=range] { flex: 1; accent-color: var(--accent); }
+  .delay-row .val { color: var(--accent); font-weight: 600; min-width: 60px; }
+
+  @media (max-width: 520px) {
+    .invert-preview-row { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════
+     HOME SCREEN
+══════════════════════════════════════════ -->
+<div id="homeScreen" class="screen active">
+  <div class="home-header">
+    <h1>GIF Maker</h1>
+    <p>Pick a mode to get started</p>
+  </div>
+
+  <div class="mode-cards">
+
+    <div class="mode-card invert-card" id="goInvert">
+      <div class="card-icon">🔄</div>
+      <h2>Invert Flasher</h2>
+      <p>Upload one image. Get a GIF that flickers between the original and its color-inverted version.</p>
+      <div class="demo-strip">
+        <span style="background:#ddd"></span>
+        <span style="background:#222"></span>
+        <span style="background:#ddd"></span>
+        <span style="background:#222"></span>
+        <span style="background:#ddd"></span>
+      </div>
+      <div class="card-arrow">Open →</div>
+    </div>
+
+    <div class="mode-card sequence-card" id="goSequence">
+      <div class="card-icon">🎞</div>
+      <h2>Sequence Builder</h2>
+      <p>Upload multiple images, drag to set the order, set per-frame delays — export as one animated GIF.</p>
+      <div class="demo-strip">
+        <span style="background:#7c6dfa"></span>
+        <span style="background:#fa6d9a"></span>
+        <span style="background:#3fd68b"></span>
+        <span style="background:#faaa6d"></span>
+      </div>
+      <div class="card-arrow">Open →</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     INVERT SCREEN
+══════════════════════════════════════════ -->
+<div id="invertScreen" class="screen">
+  <button class="back-btn" id="invertBack">← Back</button>
+
+  <div class="tool-header">
+    <h2>🔄 Invert Flasher</h2>
+    <p>Upload an image — preview the flicker, adjust speed, download GIF.</p>
+  </div>
+
+  <div class="tool-body">
+
+    <div class="drop-zone" id="invertDrop">
+      <input type="file" id="invertFile" accept="image/*">
+      <div class="dz-icon">🖼</div>
+      <p><strong>Click or drag</strong> an image here</p>
+      <p>PNG, JPG, WebP — single image</p>
+    </div>
+
+    <!-- side-by-side original / inverted -->
+    <div class="invert-preview-row" id="invertPreviews" style="display:none">
+      <div class="invert-thumb-box">
+        <div class="itb-label">Original</div>
+        <img id="invertOrigImg" alt="original">
+        <div class="invert-dims" id="invertDims"></div>
+      </div>
+      <div class="invert-thumb-box">
+        <div class="itb-label">Inverted</div>
+        <img id="invertInvImg" alt="inverted">
+      </div>
+    </div>
+
+    <!-- delay -->
+    <div class="delay-row" id="invertDelayRow" style="display:none">
+      <label for="invertSlider">Frame delay</label>
+      <input type="range" id="invertSlider" min="100" max="2000" value="300" step="50">
+      <span class="val" id="invertVal">300 ms</span>
+    </div>
+
+    <!-- live preview -->
+    <div class="preview-box" id="invertPreviewBox">
+      <div class="preview-label">Live preview</div>
+      <img id="invertPreviewImg" alt="preview">
+      <div class="preview-counter" id="invertPreviewCounter">–</div>
+    </div>
+
+    <!-- generate -->
+    <div class="generate-bar">
+      <button class="gen-btn purple" id="invertGenBtn" disabled>Generate &amp; Download GIF</button>
+      <progress class="prog-bar" id="invertProgress" value="0" max="100"></progress>
+      <div class="status-text" id="invertStatus">Upload an image to begin.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SEQUENCE SCREEN
+══════════════════════════════════════════ -->
+<div id="seqScreen" class="screen">
+  <button class="back-btn" id="seqBack">← Back</button>
+
+  <div class="tool-header">
+    <h2>🎞 Sequence Builder</h2>
+    <p>Add images, drag to reorder, set delays per frame.</p>
+  </div>
+
+  <div class="tool-body">
+
+    <div class="drop-zone" id="seqDrop">
+      <input type="file" id="seqFile" accept="image/*" multiple>
+      <div class="dz-icon">🖼</div>
+      <p><strong>Click or drag</strong> images here — select multiple at once</p>
+      <p>PNG, JPG, WebP</p>
+    </div>
+
+    <div>
+      <div class="section-label">
+        Frame order — drag to reorder
+        <button id="seqClearBtn" style="display:none">Remove all</button>
+      </div>
+      <div id="seqFrameList">
+        <div class="empty-state" id="seqEmpty">No frames yet — add images above.</div>
+      </div>
+    </div>
+
+    <div class="global-delay-row" id="seqGlobalRow" style="display:none">
+      <label>All frames:</label>
+      <input type="range" id="seqGlobalSlider" min="50" max="3000" value="300" step="50">
+      <span class="val" id="seqGlobalVal">300 ms</span>
+      <button id="seqApplyAll">Apply to all</button>
+    </div>
+
+    <div class="preview-box" id="seqPreviewBox">
+      <div class="preview-label">Live preview</div>
+      <img id="seqPreviewImg" alt="preview">
+      <div class="preview-counter" id="seqPreviewCounter">–</div>
+    </div>
+
+    <div class="generate-bar">
+      <button class="gen-btn pink" id="seqGenBtn" disabled>Generate &amp; Download GIF</button>
+      <progress class="prog-bar" id="seqProgress" value="0" max="100"></progress>
+      <div class="status-text" id="seqStatus">Add images to get started.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// NAVIGATION
+// ─────────────────────────────────────────────────────────────────────────────
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+document.getElementById('goInvert').addEventListener('click',   () => showScreen('invertScreen'));
+document.getElementById('goSequence').addEventListener('click', () => showScreen('seqScreen'));
+document.getElementById('invertBack').addEventListener('click', () => { stopInvertPreview(); showScreen('homeScreen'); });
+document.getElementById('seqBack').addEventListener('click',   () => { stopSeqPreview();    showScreen('homeScreen'); });
+
+// ═════════════════════════════════════════════════════════════════════════════
+// INVERT MODE
+// ═════════════════════════════════════════════════════════════════════════════
+let invertOrigCanvas, invertInvCanvas, invertOrigURL, invertInvURL;
+let invertPreviewTimer = null;
+let invertShowing = false; // false = showing original
+
+const invertFile        = document.getElementById('invertFile');
+const invertDrop        = document.getElementById('invertDrop');
+const invertPreviews    = document.getElementById('invertPreviews');
+const invertOrigImg     = document.getElementById('invertOrigImg');
+const invertInvImg      = document.getElementById('invertInvImg');
+const invertDims        = document.getElementById('invertDims');
+const invertDelayRow    = document.getElementById('invertDelayRow');
+const invertSlider      = document.getElementById('invertSlider');
+const invertVal         = document.getElementById('invertVal');
+const invertPreviewBox  = document.getElementById('invertPreviewBox');
+const invertPreviewImg  = document.getElementById('invertPreviewImg');
+const invertPreviewCtr  = document.getElementById('invertPreviewCounter');
+const invertGenBtn      = document.getElementById('invertGenBtn');
+const invertProgress    = document.getElementById('invertProgress');
+const invertStatus      = document.getElementById('invertStatus');
+
+invertFile.addEventListener('change', e => { if (e.target.files[0]) loadInvertImage(e.target.files[0]); });
+
+invertDrop.addEventListener('dragover', e => { e.preventDefault(); invertDrop.classList.add('drag-over'); });
+invertDrop.addEventListener('dragleave', () => invertDrop.classList.remove('drag-over'));
+invertDrop.addEventListener('drop', e => {
+  e.preventDefault(); invertDrop.classList.remove('drag-over');
+  const f = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+  if (f) loadInvertImage(f);
+});
+
+function loadInvertImage(file) {
+  invertStatus.textContent = 'Loading image...';
+  invertStatus.className = 'status-text';
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      invertStatus.textContent = 'Creating inverted version...';
+
+      // original canvas
+      invertOrigCanvas = document.createElement('canvas');
+      invertOrigCanvas.width  = img.width;
+      invertOrigCanvas.height = img.height;
+      invertOrigCanvas.getContext('2d').drawImage(img, 0, 0);
+      invertOrigURL = invertOrigCanvas.toDataURL();
+
+      // inverted canvas
+      invertInvCanvas = document.createElement('canvas');
+      invertInvCanvas.width  = img.width;
+      invertInvCanvas.height = img.height;
+      const ictx = invertInvCanvas.getContext('2d');
+      ictx.drawImage(img, 0, 0);
+      const id = ictx.getImageData(0, 0, img.width, img.height);
+      for (let i = 0; i < id.data.length; i += 4) {
+        id.data[i]   = 255 - id.data[i];
+        id.data[i+1] = 255 - id.data[i+1];
+        id.data[i+2] = 255 - id.data[i+2];
+      }
+      ictx.putImageData(id, 0, 0);
+      invertInvURL = invertInvCanvas.toDataURL();
+
+      // show thumbs
+      invertOrigImg.src = invertOrigURL;
+      invertInvImg.src  = invertInvURL;
+      invertDims.textContent = img.width + ' × ' + img.height + ' px';
+      invertPreviews.style.display = 'grid';
+      invertDelayRow.style.display = 'flex';
+      invertPreviewBox.classList.add('visible');
+
+      startInvertPreview();
+      invertGenBtn.disabled = false;
+      invertStatus.textContent = 'Preview ready.';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+function stopInvertPreview() {
+  clearTimeout(invertPreviewTimer);
+  invertPreviewTimer = null;
+}
+
+function startInvertPreview() {
+  stopInvertPreview();
+  invertShowing = false;
+  tickInvert();
+}
+
+function tickInvert() {
+  invertShowing = !invertShowing;
+  invertPreviewImg.src = invertShowing ? invertInvURL : invertOrigURL;
+  invertPreviewCtr.textContent = invertShowing ? 'Inverted frame' : 'Original frame';
+  invertPreviewTimer = setTimeout(tickInvert, parseInt(invertSlider.value));
+}
+
+invertSlider.addEventListener('input', () => {
+  invertVal.textContent = invertSlider.value + ' ms';
+  if (invertOrigURL) { stopInvertPreview(); tickInvert(); }
+});
+
+invertGenBtn.addEventListener('click', () => {
+  invertGenBtn.disabled = true;
+  invertProgress.value  = 0;
+  invertStatus.textContent = 'Generating GIF...';
+  invertStatus.className = 'status-text';
+
+  const gif = new GIF({
+    workers: 2, quality: 10, repeat: 0,
+    width: invertOrigCanvas.width, height: invertOrigCanvas.height,
+    workerScript: 'gif.worker.js'
+  });
+
+  const delay = parseInt(invertSlider.value);
+  gif.addFrame(invertOrigCanvas, { delay, copy: true });
+  gif.addFrame(invertInvCanvas,  { delay, copy: true });
+
+  gif.on('progress', p => {
+    invertProgress.value = Math.round(p * 100);
+    invertStatus.textContent = 'Encoding... ' + Math.round(p * 100) + '%';
+  });
+
+  gif.on('finished', blob => {
+    invertStatus.textContent = 'Downloading...';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'inverted.gif';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    invertProgress.value = 100;
+    invertStatus.textContent = 'Done ✓ — ' + Math.round(blob.size / 1024) + ' KB';
+    invertStatus.className = 'status-text ok';
+    invertGenBtn.disabled = false;
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  });
+
+  gif.render();
+});
+
+// ═════════════════════════════════════════════════════════════════════════════
+// SEQUENCE MODE
+// ═════════════════════════════════════════════════════════════════════════════
+const seqFrames = [];
+let seqNextId = 0;
+let seqDragSrcId = null;
+let seqPreviewTimer = null;
+let seqPreviewIndex = 0;
+
+const seqFile        = document.getElementById('seqFile');
+const seqDrop        = document.getElementById('seqDrop');
+const seqFrameList   = document.getElementById('seqFrameList');
+const seqEmpty       = document.getElementById('seqEmpty');
+const seqClearBtn    = document.getElementById('seqClearBtn');
+const seqGlobalRow   = document.getElementById('seqGlobalRow');
+const seqGlobalSlider= document.getElementById('seqGlobalSlider');
+const seqGlobalVal   = document.getElementById('seqGlobalVal');
+const seqApplyAll    = document.getElementById('seqApplyAll');
+const seqPreviewBox  = document.getElementById('seqPreviewBox');
+const seqPreviewImg  = document.getElementById('seqPreviewImg');
+const seqPreviewCtr  = document.getElementById('seqPreviewCounter');
+const seqGenBtn      = document.getElementById('seqGenBtn');
+const seqProgress    = document.getElementById('seqProgress');
+const seqStatus      = document.getElementById('seqStatus');
+
+seqFile.addEventListener('change', e => loadSeqFiles(e.target.files));
+
+seqDrop.addEventListener('dragover', e => { e.preventDefault(); seqDrop.classList.add('drag-over'); });
+seqDrop.addEventListener('dragleave', () => seqDrop.classList.remove('drag-over'));
+seqDrop.addEventListener('drop', e => {
+  e.preventDefault(); seqDrop.classList.remove('drag-over');
+  loadSeqFiles(e.dataTransfer.files);
+});
+
+function loadSeqFiles(fileList) {
+  const imgs = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+  imgs.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width; canvas.height = img.height;
+        canvas.getContext('2d').drawImage(img, 0, 0);
+        seqFrames.push({
+          id: seqNextId++,
+          name: file.name,
+          canvas,
+          dataURL: canvas.toDataURL(),
+          w: img.width, h: img.height,
+          delay: parseInt(seqGlobalSlider.value)
+        });
+        renderSeqList();
+        restartSeqPreview();
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderSeqList() {
+  seqFrameList.innerHTML = '';
+
+  if (seqFrames.length === 0) {
+    seqFrameList.appendChild(seqEmpty);
+    seqClearBtn.style.display  = 'none';
+    seqGlobalRow.style.display = 'none';
+    seqPreviewBox.classList.remove('visible');
+    seqGenBtn.disabled = true;
+    seqStatus.textContent = 'Add images to get started.';
+    seqStatus.className = 'status-text';
+    return;
+  }
+
+  seqClearBtn.style.display  = 'inline-block';
+  seqGlobalRow.style.display = 'flex';
+  seqPreviewBox.classList.add('visible');
+  seqGenBtn.disabled = false;
+  seqStatus.textContent = seqFrames.length + ' frame' + (seqFrames.length > 1 ? 's' : '') + ' ready.';
+  seqStatus.className = 'status-text';
+
+  seqFrames.forEach((frame, index) => {
+    const item = document.createElement('div');
+    item.className  = 'frame-item';
+    item.draggable  = true;
+    item.dataset.id = frame.id;
+
+    item.innerHTML = `
+      <span class="frame-handle">⠿</span>
+      <span class="frame-index">${index + 1}</span>
+      <img class="frame-thumb" src="${frame.dataURL}" alt="">
+      <div style="flex:1;min-width:0">
+        <div class="frame-name" title="${frame.name}">${frame.name}</div>
+        <div class="frame-dims">${frame.w} × ${frame.h} px</div>
+      </div>
+      <div class="frame-delay-wrap">
+        <label>delay</label>
+        <input type="number" class="delay-input" min="50" max="9999" step="50" value="${frame.delay}" data-id="${frame.id}">
+        <span class="ms-label">ms</span>
+      </div>
+      <button class="frame-remove" data-id="${frame.id}">✕</button>
+    `;
+
+    item.querySelector('.delay-input').addEventListener('change', ev => {
+      const f = seqFrames.find(f => f.id === parseInt(ev.target.dataset.id));
+      if (f) f.delay = Math.max(50, parseInt(ev.target.value) || 100);
+    });
+
+    item.querySelector('.frame-remove').addEventListener('click', ev => {
+      ev.stopPropagation();
+      const idx = seqFrames.findIndex(f => f.id === parseInt(ev.currentTarget.dataset.id));
+      if (idx !== -1) seqFrames.splice(idx, 1);
+      renderSeqList();
+      restartSeqPreview();
+    });
+
+    item.addEventListener('dragstart', seqDragStart);
+    item.addEventListener('dragover',  seqDragOver);
+    item.addEventListener('dragleave', seqDragLeave);
+    item.addEventListener('drop',      seqDragDrop);
+    item.addEventListener('dragend',   seqDragEnd);
+
+    seqFrameList.appendChild(item);
+  });
+}
+
+// drag-to-reorder
+function seqDragStart(e) {
+  seqDragSrcId = parseInt(e.currentTarget.dataset.id);
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function seqDragOver(e) {
+  e.preventDefault(); e.dataTransfer.dropEffect = 'move';
+  const id = parseInt(e.currentTarget.dataset.id);
+  if (id !== seqDragSrcId) e.currentTarget.classList.add('drag-target');
+}
+function seqDragLeave(e) { e.currentTarget.classList.remove('drag-target'); }
+function seqDragDrop(e) {
+  e.preventDefault(); e.stopPropagation();
+  const targetId = parseInt(e.currentTarget.dataset.id);
+  if (targetId === seqDragSrcId) return;
+  const srcIdx = seqFrames.findIndex(f => f.id === seqDragSrcId);
+  const rect = e.currentTarget.getBoundingClientRect();
+  const insertAfter = e.clientY > rect.top + rect.height / 2;
+  const [moved] = seqFrames.splice(srcIdx, 1);
+  const newTgt = seqFrames.findIndex(f => f.id === targetId);
+  seqFrames.splice(insertAfter ? newTgt + 1 : newTgt, 0, moved);
+  renderSeqList();
+  restartSeqPreview();
+}
+function seqDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  document.querySelectorAll('.drag-target').forEach(el => el.classList.remove('drag-target'));
+  seqDragSrcId = null;
+}
+
+seqClearBtn.addEventListener('click', () => {
+  seqFrames.length = 0;
+  seqPreviewIndex = 0;
+  renderSeqList();
+  stopSeqPreview();
+});
+
+seqGlobalSlider.addEventListener('input', () => {
+  seqGlobalVal.textContent = seqGlobalSlider.value + ' ms';
+});
+seqApplyAll.addEventListener('click', () => {
+  const v = parseInt(seqGlobalSlider.value);
+  seqFrames.forEach(f => f.delay = v);
+  renderSeqList();
+  restartSeqPreview();
+});
+
+function stopSeqPreview() {
+  clearTimeout(seqPreviewTimer);
+  seqPreviewTimer = null;
+}
+
+function restartSeqPreview() {
+  stopSeqPreview();
+  if (seqFrames.length === 0) return;
+  seqPreviewIndex = 0;
+  showSeqFrame();
+  if (seqFrames.length > 1) tickSeq();
+}
+
+function tickSeq() {
+  const delay = seqFrames[seqPreviewIndex]?.delay || 300;
+  seqPreviewTimer = setTimeout(() => {
+    seqPreviewIndex = (seqPreviewIndex + 1) % seqFrames.length;
+    showSeqFrame();
+    tickSeq();
+  }, delay);
+}
+
+function showSeqFrame() {
+  if (!seqFrames.length) return;
+  const f = seqFrames[seqPreviewIndex];
+  seqPreviewImg.src = f.dataURL;
+  seqPreviewCtr.textContent = 'Frame ' + (seqPreviewIndex + 1) + ' / ' + seqFrames.length + ' — ' + f.delay + ' ms';
+}
+
+seqGenBtn.addEventListener('click', () => {
+  if (!seqFrames.length) return;
+  seqGenBtn.disabled = true;
+  seqProgress.value  = 0;
+  seqStatus.textContent = 'Setting up encoder...';
+  seqStatus.className = 'status-text';
+
+  const outW = Math.max(...seqFrames.map(f => f.w));
+  const outH = Math.max(...seqFrames.map(f => f.h));
+
+  const gif = new GIF({
+    workers: 2, quality: 10, repeat: 0,
+    width: outW, height: outH,
+    workerScript: 'gif.worker.js'
+  });
+
+  seqFrames.forEach((frame, i) => {
+    const c = document.createElement('canvas');
+    c.width = outW; c.height = outH;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, outW, outH);
+    ctx.drawImage(frame.canvas, Math.floor((outW - frame.w) / 2), Math.floor((outH - frame.h) / 2));
+    gif.addFrame(c, { delay: frame.delay, copy: true });
+    seqStatus.textContent = 'Adding frame ' + (i + 1) + ' / ' + seqFrames.length + '...';
+  });
+
+  gif.on('progress', p => {
+    seqProgress.value = Math.round(p * 100);
+    seqStatus.textContent = 'Encoding... ' + Math.round(p * 100) + '%';
+  });
+
+  gif.on('finished', blob => {
+    seqStatus.textContent = 'Downloading...';
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'animation.gif';
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    seqProgress.value = 100;
+    seqStatus.textContent = 'Done ✓ — ' + seqFrames.length + ' frames, ' + Math.round(blob.size / 1024) + ' KB';
+    seqStatus.className = 'status-text ok';
+    seqGenBtn.disabled = false;
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  });
+
+  gif.render();
+});
+</script>
+</body>
+</html>
