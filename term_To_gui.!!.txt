@@ -38,7 +38,7 @@ echo "👉 1. Click 'Web Preview' (eye icon top-right)"
 echo "👉 2. Select 'Change port' -> Enter: 6080"
 echo "👉 3. Click 'vnc.html' -> Click 'Connect'"
 echo "👉 4. Password: password"
-echo "------------------------------------------------------------------"
+echo "----------------------------------------------------------------"
 
 # Start the proxy (this keeps the terminal running)
 ./noVNC/utils/novnc_proxy --vnc localhost:5901 --listen 6080
