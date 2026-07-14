@@ -1,48 +1,72 @@
-# 📚 Public Resources & Useful Notes
+<div align="center">
 
-A collection of useful scripts, commands, and resources I use regularly.
+# ⚡ use
+
+### My personal toolbox for Windows, Linux, Python, PowerShell, Wikipedia, GitHub, Automation & Random Useful Stuff.
+
+![GitHub last commit](https://img.shields.io/github/last-commit/kamalhossdan312-svg/use?style=for-the-badge)
+![GitHub repo size](https://img.shields.io/github/repo-size/kamalhossdan312-svg/use?style=for-the-badge)
+![GitHub stars](https://img.shields.io/github/stars/kamalhossdan312-svg/use?style=for-the-badge)
+![GitHub license](https://img.shields.io/github/license/kamalhossdan312-svg/use?style=for-the-badge)
+
+*"One repository. Hundreds of things I'll probably need again."*
+
+</div>
 
 ---
 
-# ⚡ NotNahid Utility
+# 📦 What's Inside
 
-### Main
+```
+📁 PowerShell
+📁 Python
+📁 Wikipedia
+📁 Remote PC
+📁 Github
+📁 Fonts
+📁 Cursor Theme
+📁 Image
+
+📝 Commands
+📝 Batch Files
+📝 FFmpeg
+📝 Linux
+📝 Windows
+📝 CloudShell
+📝 AutoHotKey
+📝 Git
+📝 Browser Scripts
+📝 Dorks
+📝 Notes
+```
+
+---
+
+# 🚀 Quick Commands
+
+## ⚡ Install My Utility
 
 ```powershell
 irm https://dub.sh/nahid | iex
 ```
 
-### Mirror 1
+Alternative Mirrors
 
 ```powershell
 irm https://bit.ly/notnahid | iex
 ```
 
-### Mirror 2
-
 ```powershell
 irm https://bit.ly/nonahid | iex
 ```
-
-### Mirror 3
 
 ```powershell
 irm https://bit.ly/nahd | iex
 ```
 
-### PowerShell Gallery
-
-https://www.powershellgallery.com/packages/notnahid
-
 ---
 
-# 🪟 Chris Titus Windows Utility
-
-Website
-
-https://christitus.com/windows-utility-improved/
-
-Run in PowerShell
+## 🪟 Chris Titus Windows Utility
 
 ```powershell
 irm https://christitus.com/win | iex
@@ -50,21 +74,9 @@ irm https://christitus.com/win | iex
 
 ---
 
-# 📚 Python Books
+# 🎥 FFmpeg
 
-https://drive.google.com/drive/folders/1h0lDBNndEClqhmZuei0oTZkYoCkFgXY7
-
----
-
-# 🌐 Useful Links
-
-https://docs.google.com/spreadsheets/d/1tyXMiOC7uva652ibgUSiyT6jmHwRAcc59dBfC_1GhHc/edit?usp=sharing
-
----
-
-# 🎬 FFmpeg
-
-## Remove audio from all MP4 files (PowerShell)
+## Remove Audio (PowerShell)
 
 ```powershell
 Get-ChildItem *.mp4 | % {
@@ -72,7 +84,7 @@ Get-ChildItem *.mp4 | % {
 }
 ```
 
-## Remove audio from all MP4 files (Command Prompt)
+## Remove Audio (CMD)
 
 ```cmd
 for %f in (*.mp4) do ffmpeg -i "%f" -c:v copy -an "%~nf_muted.mp4"
@@ -80,19 +92,48 @@ for %f in (*.mp4) do ffmpeg -i "%f" -c:v copy -an "%~nf_muted.mp4"
 
 ---
 
+# 🖥 Python HTTP Server
+
+## Share an entire drive
+
+```bat
+@echo off
+cd /d D:\
+python -m http.server --bind 0.0.0.0 8080
+```
+
+## Share a folder
+
+```bat
+@echo off
+cd /d "D:\The Subtitle Meham"
+python -m http.server --bind 0.0.0.0 8080
+```
+
+---
+
+# 📚 Resources
+
+## Python Books
+
+📖
+https://drive.google.com/drive/folders/1h0lDBNndEClqhmZuei0oTZkYoCkFgXY7
+
+---
+
+## Useful Links
+
+🌐
+https://docs.google.com/spreadsheets/d/1tyXMiOC7uva652ibgUSiyT6jmHwRAcc59dBfC_1GhHc/edit
+
+---
+
 # 🧠 Bengali Wikipedia
 
-## January 16, 2026
-
-- Rank: **1447**
-- Username: **NotNahid**
-- Total Edits: **153**
-
-## March 30, 2026
-
-- Rank: **572**
-- Username: **NotNahid**
-- Total Edits: **702**
+| Date | Rank | Edits |
+|------|------:|------:|
+| Jan 2026 | 1447 | 153 |
+| Mar 2026 | 572 | 702 |
 
 Statistics
 
@@ -102,20 +143,47 @@ https://xtools.wmcloud.org/ec/en.wikipedia.org/NotNahid
 
 ---
 
-# 🖥️ Python HTTP Server
+# 📂 Repository
 
-## Serve D:\
+| Folder | Description |
+|---------|-------------|
+| 📁 PowerShell | Scripts & automation |
+| 🐍 Python | Useful Python utilities |
+| 🌐 Wikipedia | Wikipedia tools |
+| 🖼 Image | Images & assets |
+| 🎨 Cursor Theme | Cursor themes |
+| 🔤 Fonts | Font collection |
+| 💻 Remote PC | Remote desktop utilities |
+| 🐙 Github | GitHub tools |
 
-```bat
-@echo off
-cd /d D:\
-python -m http.server --bind 0.0.0.0 8080
-```
+---
 
-## Serve a specific folder
+# ⭐ Why this repository?
 
-```bat
-@echo off
-cd /d "D:\The Subtitle Meham"
-python -m http.server --bind 0.0.0.0 8080
-```
+✔ Useful commands
+
+✔ Scripts
+
+✔ Automation
+
+✔ Notes
+
+✔ Windows tweaks
+
+✔ Linux tips
+
+✔ Python snippets
+
+✔ GitHub utilities
+
+✔ Random things worth keeping
+
+---
+
+<div align="center">
+
+### ⭐ If this repository helps you, consider giving it a star.
+
+Made with ❤️ by **NotNahid**
+
+</div>
