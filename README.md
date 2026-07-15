@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⚡ use
+#  use
 
 ### My personal toolbox for Windows, Linux, Python, PowerShell, Wikipedia, GitHub, Automation & Random Useful Stuff.
 
