@@ -3,6 +3,7 @@
 A lightweight, browser-based tool that takes any image and generates an animated GIF that flickers between the original and its color-inverted version — no server, no upload, no dependencies beyond a single JS library.
 
 🔗 **Live:** [https://notnahid.github.io/use/Image/making%20the%20gif.html](https://notnahid.github.io/use/Image/making%20the%20gif.html)
+[https://notnahid.github.io/use/Image/making%20the%20gif.html](https://notnahid.github.io/use/Image/both.html)
 
 ---
 
