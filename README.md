@@ -2,7 +2,7 @@
 
 #  STUFF I FIND USEFUL
 
-### My personal toolbox for Windows, Linux, Python, PowerShell, Wikipedia, GitHub, Automation & Random Useful Stuff.
+### My personal toolbox for Windows, Linux, Python, PowerShell, Wikipedia, GitHub, Automation & Random Useful Stuff..
 
 ![GitHub last commit](https://img.shields.io/github/last-commit/kamalhossdan312-svg/use?style=for-the-badge)
 ![GitHub repo size](https://img.shields.io/github/repo-size/kamalhossdan312-svg/use?style=for-the-badge)
