@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Data Utility</title>
+    <link rel="preconnect" href="https://docs.google.com">
+    <style>
+        :root {
+            --primary-color: #007aff;
+            --bg-color: #f5f5f7;
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --header-bg: rgba(255, 255, 255, 0.75);
+            --text-main: #1d1d1f;
+            --text-muted: #86868b;
+            --border-color: rgba(0, 0, 0, 0.08);
+            --inner-border: rgba(255, 255, 255, 0.6);
+            --success-color: #34c759;
+            --radius: 16px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+            background: radial-gradient(at 0% 0%, rgba(0,122,255,0.03) 0, transparent 50%), var(--bg-color);
+            background-attachment: fixed;
+            color: var(--text-main);
+            line-height: 1.4;
+            padding-bottom: 2rem;
+        }
+        .container { max-width: 1200px; margin: 0 auto; padding: 0 1rem; }
+        header {
+            background: var(--header-bg);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            padding: 0.7rem 0;
+            border-bottom: 0.5px solid var(--border-color);
+            border-top: 1px solid var(--inner-border);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .compact-header { display: flex; justify-content: space-between; align-items: center; }
+        .brand { font-size: 1rem; font-weight: 800; letter-spacing: -0.03em; }
+        .status-bar { display: flex; gap: 0.8rem; font-size: 0.7rem; color: var(--text-muted); font-weight: 600; }
+        .hidden { display: none !important; }
+        main { padding-top: 1.5rem; }
+        .data-grid { display: flex; flex-direction: column; gap: 0.6rem; }
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 0.5px solid var(--border-color);
+            border-top: 1px solid var(--inner-border);
+            border-radius: var(--radius);
+            padding: 0.6rem 1rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+            display: grid;
+            grid-template-columns: repeat(3, 1fr) 110px;
+            align-items: center;
+            gap: 1rem;
+            animation: slideUp 0.3s ease-out both;
+        }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .card-cell { display: flex; justify-content: space-between; align-items: center; min-width: 0; }
+        .field-info { flex: 1; min-width: 0; }
+        .field-label { display: block; font-size: 0.6rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 1px; }
+        .field-value { font-size: 0.95rem; font-weight: 500; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .copy-btn {
+            background: #fff; border: 0.5px solid var(--border-color); padding: 0.4rem; border-radius: 8px;
+            font-size: 0.75rem; font-weight: 600; color: var(--primary-color); cursor: pointer; min-height: 32px;
+            transition: all 0.1s;
+        }
+        .copy-btn:active { transform: scale(0.95); background: #f5f5f7; }
+        .copy-btn.copied { background: var(--success-color) !important; color: #fff !important; border-color: transparent !important; }
+        .btn-burst {
+            width: 100%; background: #fff; border: 0.5px solid var(--border-color); padding: 0.5rem;
+            border-radius: 9px; font-size: 0.85rem; font-weight: 700; cursor: pointer; min-height: 38px;
+            transition: all 0.1s; display: flex; align-items: center; justify-content: center;
+        }
+        .btn-burst:active { transform: scale(0.97); background: #eee; }
+        .btn-burst.copied { background: var(--success-color) !important; color: #fff !important; }
+        .toast {
+            position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%);
+            background: rgba(29,29,31,0.9); backdrop-filter: blur(15px); color: #fff;
+            padding: 0.6rem 1.2rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; z-index: 1000;
+        }
+        @media (max-width: 850px) {
+            .card { grid-template-columns: 1fr; gap: 0.5rem; padding: 1rem; }
+            .card-cell { border-bottom: 0.5px solid rgba(0,0,0,0.05); padding-bottom: 0.4rem; }
+            .card-cell:nth-child(3) { border-bottom: none; }
+            .btn-burst { min-height: 46px; }
+            .copy-btn { min-height: 40px; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container compact-header">
+            <span class="brand">Data Utility</span>
+            <div class="status-bar">
+                <span id="record-count">...</span>
+                <span id="last-updated"></span>
+            </div>
+        </div>
+    </header>
+    <main class="container">
+        <div id="loading" class="status-bar" style="justify-content:center; padding: 2rem;">Loading...</div>
+        <div id="error" class="hidden status-bar" style="color:red; justify-content:center;">Error loading data.</div>
+        <div id="grid" class="data-grid"></div>
+    </main>
+    <div id="toast" class="toast hidden">Copied</div>
+    <script>
+        const URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSGdR5olSz0H-RId9wlChFctUoY9pBEr4UGR2E7hqL62bB2NTkI26132fjJNgR5uIkSYT_VCnei4gKM/pub?output=csv";
+        const CACHE = 'db_cache';
+        const grid = document.getElementById('grid'), count = document.getElementById('record-count'), 
+              time = document.getElementById('last-updated'), load = document.getElementById('loading'), 
+              err = document.getElementById('error'), toast = document.getElementById('toast');
+        let data = [];
+
+        // Ultra-lightweight CSV parser (300 bytes)
+        function parse(s) {
+            const r = [], h = ['Name','Address','Surname'];
+            let q = !1, c = 0, row = 0, col = 0;
+            for(let i=0; i<s.length; i++) {
+                let cc=s[i], nc=s[i+1];
+                r[row]=r[row]||[]; r[row][col]=r[row][col]||'';
+                if(cc=='"' && q && nc=='"') { r[row][col]+=cc; i++; continue; }
+                if(cc=='"') { q=!q; continue; }
+                if(cc==',' && !q) { col++; continue; }
+                if((cc=='\n'||cc=='\r') && !q) { if(r[row].length>0){row++; col=0;} if(cc=='\r'&&nc=='\n')i++; continue; }
+                r[row][col]+=cc;
+            }
+            const heads = r[0].map(x=>x.trim().toLowerCase());
+            return r.slice(1).filter(x=>x.length>0).map(x=>{
+                const o = {};
+                h.forEach(f => {
+                    const idx = heads.indexOf(f.toLowerCase());
+                    o[f] = idx > -1 ? x[idx] : '';
+                });
+                return o;
+            });
+        }
+
+        function render() {
+            if (!data.length) return grid.innerHTML = '<div style="text-align:center;padding:2rem">Empty</div>';
+            grid.innerHTML = data.map((r, i) => `
+                <div class="card">
+                    ${['Name','Address','Surname'].map(f => {
+                        const v = (r[f]||'').trim(), d = v || '—', e = v.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        return `<div class="card-cell"><div class="field-info"><span class="field-label">${f}</span><span class="field-value">${d}</span></div><button class="copy-btn" ${!v?'disabled':''} onclick="copy(this,'${e}')">Copy</button></div>`
+                    }).join('')}
+                    <button class="btn-burst" onclick="burst(this,${i})">Burst Copy</button>
+                </div>
+            `).join('');
+        }
+
+        function status(s, c) {
+            load.classList.add('hidden'); err.classList.add('hidden');
+            count.textContent = `${data.length} records ${c?'(cached)':''}`;
+            time.innerHTML = `Updated: ${new Date().toLocaleTimeString()} <span id="dot" style="opacity:0.3">●</span>`;
+        }
+
+        async function fetchFresh() {
+            try {
+                const r = await fetch(URL);
+                const text = await r.text();
+                const fresh = parse(text);
+                if (JSON.stringify(fresh) !== JSON.stringify(data)) {
+                    data = fresh; localStorage.setItem(CACHE, JSON.stringify(data)); render();
+                }
+                status(1, 0);
+            } catch(e) { if(!data.length) err.classList.remove('hidden'); }
+        }
+
+        async function copy(b, t) {
+            await navigator.clipboard.writeText(t);
+            const o = b.textContent; b.textContent = '✓ Copied'; b.classList.add('copied');
+            toast.textContent = 'Copied'; toast.classList.remove('hidden');
+            setTimeout(() => { b.textContent = o; b.classList.remove('copied'); toast.classList.add('hidden'); }, 1500);
+        }
+
+        async function burst(b, idx) {
+            const r = data[idx], fs = ['Name','Address','Surname'], o = b.textContent;
+            b.disabled = 1;
+            try {
+                for(const f of fs) {
+                    const v = (r[f]||'').trim();
+                    if(v) {
+                        b.textContent = `Pushing ${f.split('')[0]}...`;
+                        await navigator.clipboard.writeText(v);
+                        await new Promise(res => setTimeout(res, 350));
+                    }
+                }
+                b.textContent = '✓ All in History'; b.classList.add('copied');
+            } finally { setTimeout(() => { b.textContent = o; b.classList.remove('copied'); b.disabled = 0; }, 2000); }
+        }
+
+        // Init: Cache first
+        const c = localStorage.getItem(CACHE);
+        if(c) { data=JSON.parse(c); render(); status(1, 1); }
+        fetchFresh();
+        setInterval(() => { document.getElementById('dot').style.opacity=1; fetchFresh().finally(()=>document.getElementById('dot').style.opacity=0.3); }, 60000);
+    </script>
+</body>
+</html>
