@@ -1,6 +1,6 @@
 <div align="center">
 
-#  STUFF I FIND USEFUL
+#  STUFF That's  USEFUL
 
 ### My personal toolbox for Windows, Linux, Python, PowerShell, Wikipedia, GitHub, Automation & Random Useful Stuff..
 
