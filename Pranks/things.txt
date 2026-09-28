@@ -1,0 +1,36 @@
+Mild (annoying but survivable)
+Hide desktop icons — Right-click desktop → View → uncheck "Show desktop icons" (you already knew this one)
+Rotate the screen — Press Ctrl + Alt + Down Arrow (or any arrow). Looks broken, fix is Ctrl+Alt+Up
+Snap the window — hide the taskbar: right-click taskbar → Taskbar settings → toggle off "Lock the taskbar," then drag it to 0 height, then re-lock it
+Medium (they'll suffer)
+Swap mouse buttons — Settings → Mouse → switch to right-handed mode
+Mouse speed to max or ultra slow — Settings → Mouse → pointer speed slider
+Battery of shortcuts — rename every desktop shortcut to something different from what they open, or make a chrome shortcut open Edge 💀 (very personal attack)
+Wallpaper — screenshot their desktop, set it as wallpaper, THEN hide icons. All clicks, nothing opens
+Evil tier 🔥
+Auto-type script — make Notepad open and type creepy messages by itself:
+vbs
+
+Copy
+Set wshShell = wScript.CreateObject("WScript.Shell")
+WScript.Sleep 5000
+wshShell.Run "notepad"
+WScript.Sleep 2000
+wshShell.SendKeys "I am watching you..."
+Save as x.vbs (any name ending in .vbs), put it in shell:startup so it runs every boot 💀
+
+Random cursor teleport (vbs in startup):
+vbs
+
+Copy
+Do
+  Randomize
+  Set shell = CreateObject("WScript.Shell")
+  posx = Int(Rnd * 1900)
+  posy = Int(Rnd * 1000)
+  shell.Run "powershell -command ""[System.Windows.Forms.Cursor]::Position = '" & posx & "," & posy & "'""", 0, False
+  WScript.Sleep 10000
+Loop
+Mouse jumps every 10 seconds, forever. Cruel.
+
+CAPS LOCK inversion — download/run capslock remap or use PowerToys to swap it with something dumb like F13
