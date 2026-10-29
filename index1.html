@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Wikipedia Smart Editor Pro</title>
+
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f8;
+    padding: 20px;
+  }
+
+  h2 { margin-bottom: 10px; }
+
+  .box {
+    background: white;
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+  }
+
+  textarea, input {
+    width: 100%;
+    padding: 10px;
+    margin-top: 8px;
+    margin-bottom: 10px;
+  }
+
+  button {
+    padding: 8px 10px;
+    cursor: pointer;
+    margin: 3px;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 0;
+    border-bottom: 1px solid #eee;
+  }
+
+  .row input {
+    flex: 1;
+    padding: 6px;
+  }
+
+  .small {
+    font-size: 12px;
+    color: #666;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+  }
+
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+  }
+
+  th { background: #eee; }
+</style>
+</head>
+
+<body>
+
+<h2>🧠 Wikipedia Smart Editor Pro</h2>
+
+<!-- PASTE BOX -->
+<div class="box">
+  <h3>📋 Paste messy data</h3>
+  <textarea id="pasteBox" rows="6"
+    placeholder="Paste wiki table / messy contest data here..."></textarea>
+
+  <button onclick="autoExtract()">⚡ Auto Extract</button>
+</div>
+
+<!-- MANUAL ADD -->
+<div class="box">
+  <h3>➕ Add Page</h3>
+  <input id="singleInput" placeholder="Wiki title or URL..." />
+  <button onclick="addSingle()">Add</button>
+</div>
+
+<!-- LIST -->
+<div class="box">
+  <h3>📌 Editable Pages</h3>
+  <div id="list"></div>
+</div>
+
+<!-- ACTIONS -->
+<div class="box">
+  <button onclick="runAll()">🚀 Analyze Wikipedia</button>
+  <button onclick="clearAll()">🧹 Clear All</button>
+
+  <div class="small">
+    Click on any title to edit it directly. Changes auto-save.
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="box">
+  <h3>📊 Results</h3>
+  <div id="results">No data yet</div>
+</div>
+
+<script>
+
+let pages = [];
+
+/* ---------------------------
+   SMART EXTRACTOR
+----------------------------*/
+function extractArticlesFromText(text) {
+  const lines = text.split("\n");
+  const cleaned = [];
+
+  for (let line of lines) {
+    line = line.trim();
+    if (!line) continue;
+
+    if (
+      line.includes("গৃহীত হয়নি") ||
+      line.includes("Points") ||
+      line.includes("Article") ||
+      line.includes("Added on") ||
+      line.includes("অনুবাদ")
+    ) continue;
+
+    if (/^[A-Za-zÀ-ÿ\u0980-\u09FF\s]+:\s*\d/.test(line)) continue;
+
+    line = line.replace(/\d{1,2}\s+\w+\s+\d{1,2}:\d{2}\s*(AM|PM)?/gi, "");
+    line = line.replace(/:\s*\d+/g, "");
+    line = line.trim();
+
+    if (line.length > 2) cleaned.push(line);
+  }
+
+  return [...new Set(cleaned)];
+}
+
+/* ---------------------------
+   CLEAN WIKI
+----------------------------*/
+function cleanWiki(text) {
+  text = text.replace(/\{\{[^}]+\}\}/g, "");
+  text = text.replace(/\[\[(?:[^\]|]+\|)?([^\]]+)\]\]/g, "$1");
+  text = text.replace(/={2,}[^=]+={2,}/g, "");
+  text = text.replace(/<[^>]+>/g, "");
+  text = text.replace(/'{2,}/g, "");
+  return text;
+}
+
+/* ---------------------------
+   FETCH WORD COUNT
+----------------------------*/
+async function countWords(title) {
+  const url =
+    "https://bn.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&origin=*&titles=" +
+    encodeURIComponent(title);
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const pagesData = data.query.pages;
+
+    for (let id in pagesData) {
+      const page = pagesData[id];
+      if (!page.revisions) return 0;
+
+      const content = page.revisions[0]["*"] || "";
+      const clean = cleanWiki(content);
+
+      return clean.split(/\s+/).filter(Boolean).length;
+    }
+  } catch {
+    return 0;
+  }
+}
+
+/* ---------------------------
+   ADD SINGLE PAGE
+----------------------------*/
+function addSingle() {
+  const input = document.getElementById("singleInput").value.trim();
+  if (!input) return;
+
+  pages.push({ title: input, words: null });
+  document.getElementById("singleInput").value = "";
+  render();
+}
+
+/* ---------------------------
+   AUTO EXTRACT
+----------------------------*/
+function autoExtract() {
+  const raw = document.getElementById("pasteBox").value;
+  const extracted = extractArticlesFromText(raw);
+
+  extracted.forEach(t => {
+    pages.push({ title: t, words: null });
+  });
+
+  render();
+}
+
+/* ---------------------------
+   UPDATE TITLE (LIVE EDIT)
+----------------------------*/
+function updateTitle(i, value) {
+  pages[i].title = value;
+}
+
+/* ---------------------------
+   REMOVE
+----------------------------*/
+function remove(i) {
+  pages.splice(i, 1);
+  render();
+}
+
+/* ---------------------------
+   CLEAR
+----------------------------*/
+function clearAll() {
+  pages = [];
+  document.getElementById("results").innerHTML = "No data yet";
+  render();
+}
+
+/* ---------------------------
+   RENDER (EDITABLE UI)
+----------------------------*/
+function render() {
+  const div = document.getElementById("list");
+
+  if (pages.length === 0) {
+    div.innerHTML = "<i>No pages added</i>";
+    return;
+  }
+
+  div.innerHTML = pages.map((p, i) => `
+    <div class="row">
+
+      <!-- editable title -->
+      <input
+        value="${p.title}"
+        oninput="updateTitle(${i}, this.value)"
+      />
+
+      <!-- word count -->
+      <span>${p.words ?? ""}</span>
+
+      <!-- delete -->
+      <button onclick="remove(${i})">❌</button>
+
+    </div>
+  `).join("");
+}
+
+/* ---------------------------
+   ANALYZE ALL
+----------------------------*/
+async function runAll() {
+  const out = document.getElementById("results");
+  out.innerHTML = "⏳ Analyzing...";
+
+  let total = 0;
+
+  let table = `
+    <table>
+      <tr>
+        <th>#</th>
+        <th>Article</th>
+        <th>Words</th>
+      </tr>
+  `;
+
+  for (let i = 0; i < pages.length; i++) {
+    const w = await countWords(pages[i].title);
+    pages[i].words = w;
+    total += w;
+
+    table += `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${pages[i].title}</td>
+        <td>${w.toLocaleString()}</td>
+      </tr>
+    `;
+  }
+
+  table += "</table>";
+
+  const avg = pages.length ? Math.floor(total / pages.length) : 0;
+
+  out.innerHTML =
+    table +
+    `<br><b>Total:</b> ${total.toLocaleString()}<br>` +
+    `<b>Average:</b> ${avg.toLocaleString()}`;
+}
+
+/* init */
+render();
+
+</script>
+
+</body>
+</html>

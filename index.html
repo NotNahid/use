@@ -2,313 +2,277 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Wikipedia Smart Editor Pro</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>use — a personal toolbox</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f4f6f8;
-    padding: 20px;
-  }
-
-  h2 { margin-bottom: 10px; }
-
-  .box {
-    background: white;
-    padding: 15px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-  }
-
-  textarea, input {
-    width: 100%;
-    padding: 10px;
-    margin-top: 8px;
-    margin-bottom: 10px;
-  }
-
-  button {
-    padding: 8px 10px;
-    cursor: pointer;
-    margin: 3px;
-  }
-
-  .row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 6px 0;
-    border-bottom: 1px solid #eee;
-  }
-
-  .row input {
-    flex: 1;
-    padding: 6px;
-  }
-
-  .small {
-    font-size: 12px;
-    color: #666;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 10px;
-  }
-
-  th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-  }
-
-  th { background: #eee; }
+:root{--face:#c0c0c0;--tx:#000;--w:#fff;--l:#dfdfdf;--g:#808080;--k:#0a0a0a;--pn:#fff;--pt:#000;--nv:#800000;--nv2:#800000;--desk:#3a3a3a;--bl:#800000;--ic:#404040;
+--raise:inset -1px -1px var(--k),inset 1px 1px var(--w),inset -2px -2px var(--g),inset 2px 2px var(--l);
+--sunk:inset -1px -1px var(--w),inset 1px 1px var(--g),inset -2px -2px var(--l),inset 2px 2px var(--k);box-sizing:border-box}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--face:#3a3a3a;--tx:#e8e8e8;--w:#6b6b6b;--l:#4e4e4e;--g:#1b1b1b;--k:#000;--pn:#141414;--pt:#e8e8e8;--desk:#161616;--bl:#ff9a8a;--ic:#bbb}}
+:root[data-theme="dark"]{--face:#3a3a3a;--tx:#e8e8e8;--w:#6b6b6b;--l:#4e4e4e;--g:#1b1b1b;--k:#000;--pn:#141414;--pt:#e8e8e8;--desk:#161616;--bl:#ff9a8a;--ic:#bbb}
+*,*:before,*:after{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;position:fixed;inset:0;overflow:hidden;background:var(--desk);color:var(--tx);font:13px/1.35 Tahoma,"MS Sans Serif",Verdana,sans-serif;-webkit-font-smoothing:none}
+a{color:inherit;text-decoration:none}button,input{font:inherit;color:inherit}
+:focus-visible{outline:1px dotted var(--tx);outline-offset:-4px}
+@keyframes pop{from{transform:scale(.82);opacity:.3}to{transform:none;opacity:1}}
+@keyframes rise{from{transform:translateY(16px);opacity:0}to{transform:none;opacity:1}}
+@keyframes wig{25%{transform:translateY(-4px) rotate(-4deg)}75%{transform:translateY(1px) rotate(3deg)}}
+@keyframes fill{from{width:0}to{width:100%}}
+@keyframes grow{from{transform:scaleY(0)}to{transform:none}}
+@keyframes blip{50%{background:var(--nv);color:#fff}}
+.btn{min-height:28px;padding:3px 16px;border:0;border-radius:0;background:var(--face);color:var(--tx);box-shadow:var(--raise);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px;white-space:nowrap;transition:background .15s steps(3),transform .08s steps(2)}
+.btn:hover:not(:active){background:var(--l);outline:1px dotted var(--tx);outline-offset:-5px}
+.btn:active,.btn[aria-pressed="true"]{box-shadow:var(--sunk);padding:4px 15px 2px 17px}
+.btn:active{animation:blip .2s steps(2)}
+#desk{position:absolute;inset:0 0 calc(34px + env(safe-area-inset-bottom,0px)) 0;padding-top:env(safe-area-inset-top,0px)}
+#icons{position:absolute;top:calc(14px + env(safe-area-inset-top,0px));left:12px;display:flex;flex-direction:column;gap:16px}
+.di{width:84px;background:none;border:0;padding:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;color:#fff;font-size:12px}
+.di .ib{width:48px;height:48px;display:grid;place-items:center;background:var(--face);color:var(--tx);box-shadow:var(--raise)}
+.di svg,.ti svg,#start svg{fill:currentColor}.di svg{width:26px;height:26px}
+.di span:last-child,.di{text-shadow:1px 1px #000}
+.di:hover .ib{background:var(--l)}.di:active .ib{box-shadow:var(--sunk)}
+.di:focus-visible,.di:active{outline:1px dotted #fff;outline-offset:2px}
+.win{position:absolute;display:flex;flex-direction:column;background:var(--face);box-shadow:var(--raise);padding:3px;animation:pop .2s steps(5)}
+.win[hidden],.win.min{display:none}
+.win.max{position:fixed;inset:env(safe-area-inset-top,0px) 0 calc(34px + env(safe-area-inset-bottom,0px)) 0;width:auto!important;height:auto!important}
+.tb{display:flex;align-items:center;gap:3px;height:22px;padding:2px 2px 2px 4px;background:var(--g);color:var(--l);font-weight:700;cursor:default;touch-action:none}
+.win.on .tb{background:var(--nv);color:#fff}
+.tb h2{margin:0;font-size:13px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb .btn{min-height:0;height:18px;width:20px;padding:0;font-size:12px;line-height:1;font-weight:700}
+.tb .btn:active{padding:2px 0 0 2px}.tb .btn:hover:not(:active){outline:0}
+.mb{display:flex;padding:2px 0}.mn{position:relative}.mn>button{background:none;border:0;padding:3px 9px;cursor:pointer}
+.mn>button:hover,.mn.open>button{background:var(--nv);color:#fff}
+.dd{display:none;position:absolute;top:100%;left:0;z-index:50;min-width:170px;padding:3px;background:var(--face);box-shadow:var(--raise)}
+.mn.open .dd{display:block;animation:rise .12s steps(3)}.dd button,.dd a{display:block;width:100%;text-align:left;background:none;border:0;padding:5px 22px;cursor:pointer}
+.dd button:hover,.dd a:hover{background:var(--nv);color:#fff}
+.bd{flex:1;min-height:0;padding:4px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+.pane{background:var(--pn);color:var(--pt);box-shadow:var(--sunk);padding:8px;overflow:auto;min-height:0}
+.ex{display:grid;grid-template-columns:180px 1fr;gap:6px;flex:1;min-height:0}
+.tree{display:flex;flex-direction:column}
+.tree button{display:flex;justify-content:space-between;gap:8px;background:none;border:1px dotted transparent;padding:4px 8px;text-align:left;cursor:pointer}
+.tree button:hover{border-color:var(--pt)}.tree button[aria-pressed="true"]{background:var(--nv);color:#fff}
+.tool{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.search{flex:1;min-width:160px;display:flex;align-items:center;gap:6px}.search svg{width:16px;height:16px;fill:var(--tx)}
+.search input{flex:1;height:26px;padding:0 6px;border:0;background:var(--pn);color:var(--pt);box-shadow:var(--sunk);outline:none;border-radius:0}
+.search input:focus{box-shadow:var(--sunk),inset 0 0 0 3px var(--l)}
+.rd{display:flex;align-items:center;gap:6px;cursor:pointer}.rd input{position:absolute;opacity:0}
+.rd i{width:14px;height:14px;border-radius:50%;background:var(--pn);box-shadow:inset 1px 1px var(--g),inset -1px -1px var(--w),inset 2px 2px var(--k);position:relative;transition:transform .1s steps(2)}
+.rd:active i{transform:scale(.8)}.rd input:checked+i:before{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--pt);animation:pop .15s steps(3)}
+.rd input:focus-visible+i{outline:1px dotted var(--tx);outline-offset:3px}
+.files{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px 6px}
+.it{display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;padding:4px;border:1px dotted transparent}
+.it:hover{border-color:var(--pt)}.it:focus-visible{outline:0}
+.ico{width:34px;height:42px;background:var(--w);border:1px solid #000;clip-path:polygon(0 0,68% 0,100% 24%,100% 100%,0 100%);display:grid;place-items:end center;padding-bottom:4px;font:700 9px Tahoma,sans-serif;color:var(--nv);flex:none}
+.nm{font-weight:700;word-break:break-word}.it:hover .nm,.it:focus-visible .nm{background:var(--nv);color:#fff}.ds{font-size:11px;opacity:.75}.mt{display:none}
+.files.list{grid-template-columns:1fr;gap:2px}.list .it{flex-direction:row;text-align:left;gap:10px;padding:3px 6px}.list .ico{width:22px;height:26px;font-size:0;padding:0}.list .tx{flex:1;min-width:0}.list .mt{display:block;font-size:11px;white-space:nowrap}
+.tx{display:contents}.list .tx{display:block}.empty{padding:16px}
+.st{display:flex;gap:4px}.st span{flex:1;padding:2px 8px;box-shadow:var(--sunk)}.st span:last-child{flex:2}
+.tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:6px}
+.ti{display:flex;flex-direction:column;gap:6px;min-height:130px;padding:10px;background:var(--face);color:var(--tx);box-shadow:var(--raise);transition:transform .08s steps(2)}
+.ti svg{width:32px;height:32px}.ti:hover{background:var(--l)}.ti:active{box-shadow:var(--sunk);transform:translate(1px,1px)}
+.ti b{font-size:13px}.ti small{flex:1;font-size:11.5px}.ti .go{font-weight:700;color:var(--bl);text-decoration:underline}
+.cmd{display:flex;gap:8px;flex-wrap:wrap}.cmd input{flex:1;min-width:200px;height:28px;padding:0 8px;border:0;border-radius:0;background:var(--pn);color:var(--pt);box-shadow:var(--sunk);outline:none;font:13px "Courier New",monospace}
+.cmdlist{display:flex;flex-direction:column;gap:6px}.cmdlist code{display:block;padding:6px 8px;background:var(--pn);color:var(--pt);box-shadow:var(--sunk);font:12px "Courier New",monospace;overflow-x:auto;white-space:pre}
+.pg{height:20px;padding:3px;box-shadow:var(--sunk);margin-bottom:10px}.pg i{display:block;height:100%;width:100%;background:repeating-linear-gradient(90deg,var(--nv) 0 10px,transparent 10px 12px);animation:fill 1.6s steps(20)}
+.graph{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;height:170px}
+.bar{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end;font-size:11px;text-align:center}
+.bar i{display:block;width:26px;box-shadow:var(--sunk);padding:3px;transform-origin:bottom;animation:grow .7s steps(8)}
+.bar i:before{content:"";display:block;height:100%;background:repeating-linear-gradient(0deg,var(--nv) 0 8px,transparent 8px 10px)}
+table{border-collapse:collapse;width:100%}th,td{padding:4px 8px;text-align:right;border-bottom:1px solid var(--g)}th:first-child,td:first-child{text-align:left}
+h3{margin:0 0 8px;font-size:13px}
+#task{position:fixed;left:0;right:0;bottom:0;height:calc(34px + env(safe-area-inset-bottom,0px));padding:3px 3px env(safe-area-inset-bottom,0px);display:flex;align-items:center;gap:4px;background:var(--face);box-shadow:inset 0 1px var(--l),inset 0 2px var(--w);z-index:9000}
+#tabs{flex:1;display:flex;gap:3px;overflow-x:auto;min-width:0}
+#tabs .btn{height:26px;min-height:0;width:170px;max-width:42vw;flex:none;justify-content:flex-start;overflow:hidden;text-overflow:ellipsis;padding:0 8px;font-weight:400}
+#tabs .btn[aria-pressed="true"]{font-weight:700;background:repeating-conic-gradient(var(--face) 0 25%,var(--l) 0 50%) 0 0/2px 2px;padding:2px 7px 0 9px}
+#clock{padding:3px 10px;box-shadow:var(--sunk);white-space:nowrap}
+.sw{position:relative;width:38px;height:18px;flex:none}.sw input{position:absolute;opacity:0;inset:0;z-index:2;cursor:pointer;margin:0}
+.sw i{position:absolute;inset:0;background:var(--pn);box-shadow:var(--sunk)}
+.sw i:before{content:"";position:absolute;top:2px;left:2px;width:16px;height:12px;background:var(--face);box-shadow:var(--raise);transition:left .25s steps(5)}
+.sw input:checked+i:before{left:18px;background:var(--nv)}.sw input:focus-visible+i{outline:1px dotted var(--tx);outline-offset:3px}
+#start{position:fixed;left:2px;bottom:calc(34px + env(safe-area-inset-bottom,0px));width:230px;padding:3px 3px 3px 32px;background:var(--face);box-shadow:var(--raise);z-index:9100;display:none;flex-direction:column}
+#start:before{content:"use — stuff I find useful";position:absolute;left:3px;top:3px;bottom:3px;width:26px;background:var(--nv);color:#fff;font:700 15px Tahoma,sans-serif;writing-mode:vertical-rl;transform:rotate(180deg);padding:8px 3px;white-space:nowrap;overflow:hidden}
+#start.open{display:flex;animation:rise .18s steps(4)}
+#start button,#start a{display:flex;align-items:center;gap:10px;background:none;border:0;padding:8px 10px;cursor:pointer;text-align:left}
+#start button:hover,#start a:hover{background:var(--nv);color:#fff}#start svg{width:18px;height:18px}
+#start hr{border:0;height:2px;box-shadow:var(--sunk);margin:4px 2px;width:auto}#start .th{display:flex;align-items:center;justify-content:space-between;padding:6px 10px}
+.logo{width:12px;height:12px;background:var(--nv)}
+@media (max-width:760px){#icons{flex-direction:row;flex-wrap:wrap;left:8px;right:8px;gap:6px}.di{width:70px;font-size:11px}
+.win{position:fixed;inset:calc(92px + env(safe-area-inset-top,0px)) 4px calc(38px + env(safe-area-inset-bottom,0px)) 4px;width:auto!important;height:auto!important;left:4px!important;top:auto!important}
+.win.max{inset:env(safe-area-inset-top,0px) 0 calc(34px + env(safe-area-inset-bottom,0px)) 0}
+.ex{grid-template-columns:1fr;grid-template-rows:auto 1fr}.tree{flex-direction:row;overflow-x:auto}.tree button{flex:none}#clock{display:none}.tb .mx{display:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
-
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="s-folder" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 5h7l2 2h11v13H2zm2 4v9h16V9z"/></symbol>
+<symbol id="s-app" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 4h20v16H2zm2 4v10h16V8z"/></symbol>
+<symbol id="s-term" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2 4h20v16H2zm2 2v12h16V6zm2 2 4 3-4 3zm6 5h6v2h-6z"/></symbol>
+<symbol id="s-chart" viewBox="0 0 24 24"><path d="M4 12h4v8H4zm6-8h4v16h-4zm6 5h4v11h-4z"/></symbol>
+<symbol id="s-search" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M10 3a7 7 0 1 0 4.200 12.600L19 20.400 20.400 19l-4.800-4.800A7 7 0 0 0 10 3zm0 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10z"/></symbol>
+</defs></svg>
 
-<h2>🧠 Wikipedia Smart Editor Pro</h2>
-
-<!-- PASTE BOX -->
-<div class="box">
-  <h3>📋 Paste messy data</h3>
-  <textarea id="pasteBox" rows="6"
-    placeholder="Paste wiki table / messy contest data here..."></textarea>
-
-  <button onclick="autoExtract()">⚡ Auto Extract</button>
-</div>
-
-<!-- MANUAL ADD -->
-<div class="box">
-  <h3>➕ Add Page</h3>
-  <input id="singleInput" placeholder="Wiki title or URL..." />
-  <button onclick="addSingle()">Add</button>
-</div>
-
-<!-- LIST -->
-<div class="box">
-  <h3>📌 Editable Pages</h3>
-  <div id="list"></div>
-</div>
-
-<!-- ACTIONS -->
-<div class="box">
-  <button onclick="runAll()">🚀 Analyze Wikipedia</button>
-  <button onclick="clearAll()">🧹 Clear All</button>
-
-  <div class="small">
-    Click on any title to edit it directly. Changes auto-save.
+<div id="desk">
+  <div id="icons">
+    <button class="di" data-open="files" type="button"><span class="ib"><svg><use href="#s-folder"/></svg></span>Files</button>
+    <button class="di" data-open="live" type="button"><span class="ib"><svg><use href="#s-app"/></svg></span>Live tools</button>
+    <button class="di" data-open="install" type="button"><span class="ib"><svg><use href="#s-term"/></svg></span>Install</button>
+    <button class="di" data-open="stats" type="button"><span class="ib"><svg><use href="#s-chart"/></svg></span>Stats</button>
   </div>
+
+  <section class="win" id="w-files" style="left:140px;top:22px;width:840px;height:540px" aria-label="Files">
+    <div class="tb"><h2>Exploring — use (C:)</h2><button class="btn mn-b" data-act="min" type="button" aria-label="Minimize">_</button><button class="btn mx" data-act="max" type="button" aria-label="Maximize">□</button><button class="btn" data-act="close" type="button" aria-label="Close">✕</button></div>
+    <div class="mb">
+      <div class="mn"><button type="button">File</button><div class="dd"><a href="https://github.com/NotNahid/use" target="_blank" rel="noopener">Open repo on GitHub</a><button data-act="close" type="button">Close</button></div></div>
+      <div class="mn"><button type="button">View</button><div class="dd"><button data-view="g" type="button">Large icons</button><button data-view="l" type="button">List</button></div></div>
+      <div class="mn"><button type="button">Help</button><div class="dd"><a href="https://github.com/NotNahid/use#readme" target="_blank" rel="noopener">About this repo</a></div></div>
+    </div>
+    <div class="bd">
+      <div class="tool">
+        <label class="search"><svg><use href="#s-search"/></svg><input id="q" type="search" placeholder="Search for…" aria-label="Search files"></label>
+        <label class="rd"><input type="radio" name="v" value="g" checked><i></i>Icons</label>
+        <label class="rd"><input type="radio" name="v" value="l"><i></i>List</label>
+      </div>
+      <div class="ex"><nav class="pane tree" id="tree" aria-label="Folders"></nav><div class="pane"><div class="files" id="files"></div></div></div>
+      <div class="st"><span id="cnt"></span><span id="cat"></span></div>
+    </div>
+  </section>
+
+  <section class="win" id="w-live" style="left:200px;top:70px;width:680px;height:420px" aria-label="Live tools">
+    <div class="tb"><h2>Live tools — open in the browser</h2><button class="btn" data-act="min" type="button" aria-label="Minimize">_</button><button class="btn mx" data-act="max" type="button" aria-label="Maximize">□</button><button class="btn" data-act="close" type="button" aria-label="Close">✕</button></div>
+    <div class="bd"><div class="tiles" id="tiles"></div></div>
+  </section>
+
+  <section class="win" id="w-install" style="left:260px;top:120px;width:620px;height:400px" aria-label="Install">
+    <div class="tb"><h2>Run — install my utility</h2><button class="btn" data-act="min" type="button" aria-label="Minimize">_</button><button class="btn mx" data-act="max" type="button" aria-label="Maximize">□</button><button class="btn" data-act="close" type="button" aria-label="Close">✕</button></div>
+    <div class="bd">
+      <p style="margin:4px">Paste this into PowerShell to run the utility straight from the web.</p>
+      <div class="cmd"><input id="cmd" readonly value="irm https://dub.sh/nahid | iex" aria-label="Install command"><button class="btn" id="copy" type="button">Copy</button></div>
+      <h3 style="margin-top:8px">More one-liners</h3>
+      <div class="cmdlist">
+        <code>irm https://christitus.com/win | iex</code>
+        <code>Get-ChildItem *.mp4 | % { ffmpeg -i $_ -c:v copy -an "$($_.BaseName)_muted.mp4" }</code>
+        <code>python -m http.server --bind 0.0.0.0 8080</code>
+      </div>
+    </div>
+  </section>
+
+  <section class="win" id="w-stats" style="left:320px;top:60px;width:640px;height:470px" aria-label="Stats">
+    <div class="tb"><h2>Stats — what’s in the box</h2><button class="btn" data-act="min" type="button" aria-label="Minimize">_</button><button class="btn mx" data-act="max" type="button" aria-label="Maximize">□</button><button class="btn" data-act="close" type="button" aria-label="Close">✕</button></div>
+    <div class="bd">
+      <div class="pane"><h3>Files per folder</h3><div class="pg" aria-hidden="true"><i></i></div><div class="graph" id="graph"></div></div>
+      <div class="pane"><h3>Bengali Wikipedia</h3>
+        <table><tr><th>Date</th><th>Rank</th><th>Edits</th></tr><tr><td>Jan 2026</td><td>1447</td><td>153</td></tr><tr><td>Mar 2026</td><td>572</td><td>702</td></tr></table>
+        <p style="margin:10px 0 0;font-size:13px"><a style="color:var(--bl)" href="https://meta.wikimedia.org/wiki/Global_statistics/Rank_data/bnwiki" target="_blank" rel="noopener">Global rank data</a> · <a style="color:var(--bl)" href="https://xtools.wmcloud.org/ec/en.wikipedia.org/NotNahid" target="_blank" rel="noopener">Edit counter</a></p></div>
+    </div>
+  </section>
 </div>
 
-<!-- RESULTS -->
-<div class="box">
-  <h3>📊 Results</h3>
-  <div id="results">No data yet</div>
+<div id="start" role="menu" aria-label="Start menu">
+  <button data-open="files" type="button"><svg ><use href="#s-folder"/></svg>Files</button>
+  <button data-open="live" type="button"><svg ><use href="#s-app"/></svg>Live tools</button>
+  <button data-open="install" type="button"><svg ><use href="#s-term"/></svg>Install</button>
+  <button data-open="stats" type="button"><svg ><use href="#s-chart"/></svg>Stats</button>
+  <hr>
+  <a href="https://github.com/NotNahid/use" target="_blank" rel="noopener">Open on GitHub</a>
+  <div class="th"><span>Dark mode</span><label class="sw"><input type="checkbox" id="dark" aria-label="Dark mode"><i></i></label></div>
+</div>
+
+<div id="task">
+  <button class="btn" id="startbtn" type="button" aria-expanded="false"  style="font-weight:700;min-height:26px;height:26px"><span class="logo"></span>Start</button>
+  <div id="tabs"></div>
+  <time id="clock"></time>
 </div>
 
 <script>
-
-let pages = [];
-
-/* ---------------------------
-   SMART EXTRACTOR
-----------------------------*/
-function extractArticlesFromText(text) {
-  const lines = text.split("\n");
-  const cleaned = [];
-
-  for (let line of lines) {
-    line = line.trim();
-    if (!line) continue;
-
-    if (
-      line.includes("গৃহীত হয়নি") ||
-      line.includes("Points") ||
-      line.includes("Article") ||
-      line.includes("Added on") ||
-      line.includes("অনুবাদ")
-    ) continue;
-
-    if (/^[A-Za-zÀ-ÿ\u0980-\u09FF\s]+:\s*\d/.test(line)) continue;
-
-    line = line.replace(/\d{1,2}\s+\w+\s+\d{1,2}:\d{2}\s*(AM|PM)?/gi, "");
-    line = line.replace(/:\s*\d+/g, "");
-    line = line.trim();
-
-    if (line.length > 2) cleaned.push(line);
-  }
-
-  return [...new Set(cleaned)];
-}
-
-/* ---------------------------
-   CLEAN WIKI
-----------------------------*/
-function cleanWiki(text) {
-  text = text.replace(/\{\{[^}]+\}\}/g, "");
-  text = text.replace(/\[\[(?:[^\]|]+\|)?([^\]]+)\]\]/g, "$1");
-  text = text.replace(/={2,}[^=]+={2,}/g, "");
-  text = text.replace(/<[^>]+>/g, "");
-  text = text.replace(/'{2,}/g, "");
-  return text;
-}
-
-/* ---------------------------
-   FETCH WORD COUNT
-----------------------------*/
-async function countWords(title) {
-  const url =
-    "https://bn.wikipedia.org/w/api.php?action=query&prop=revisions&rvprop=content&format=json&origin=*&titles=" +
-    encodeURIComponent(title);
-
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-
-    const pagesData = data.query.pages;
-
-    for (let id in pagesData) {
-      const page = pagesData[id];
-      if (!page.revisions) return 0;
-
-      const content = page.revisions[0]["*"] || "";
-      const clean = cleanWiki(content);
-
-      return clean.split(/\s+/).filter(Boolean).length;
-    }
-  } catch {
-    return 0;
-  }
-}
-
-/* ---------------------------
-   ADD SINGLE PAGE
-----------------------------*/
-function addSingle() {
-  const input = document.getElementById("singleInput").value.trim();
-  if (!input) return;
-
-  pages.push({ title: input, words: null });
-  document.getElementById("singleInput").value = "";
-  render();
-}
-
-/* ---------------------------
-   AUTO EXTRACT
-----------------------------*/
-function autoExtract() {
-  const raw = document.getElementById("pasteBox").value;
-  const extracted = extractArticlesFromText(raw);
-
-  extracted.forEach(t => {
-    pages.push({ title: t, words: null });
-  });
-
-  render();
-}
-
-/* ---------------------------
-   UPDATE TITLE (LIVE EDIT)
-----------------------------*/
-function updateTitle(i, value) {
-  pages[i].title = value;
-}
-
-/* ---------------------------
-   REMOVE
-----------------------------*/
-function remove(i) {
-  pages.splice(i, 1);
-  render();
-}
-
-/* ---------------------------
-   CLEAR
-----------------------------*/
-function clearAll() {
-  pages = [];
-  document.getElementById("results").innerHTML = "No data yet";
-  render();
-}
-
-/* ---------------------------
-   RENDER (EDITABLE UI)
-----------------------------*/
-function render() {
-  const div = document.getElementById("list");
-
-  if (pages.length === 0) {
-    div.innerHTML = "<i>No pages added</i>";
-    return;
-  }
-
-  div.innerHTML = pages.map((p, i) => `
-    <div class="row">
-
-      <!-- editable title -->
-      <input
-        value="${p.title}"
-        oninput="updateTitle(${i}, this.value)"
-      />
-
-      <!-- word count -->
-      <span>${p.words ?? ""}</span>
-
-      <!-- delete -->
-      <button onclick="remove(${i})">❌</button>
-
-    </div>
-  `).join("");
-}
-
-/* ---------------------------
-   ANALYZE ALL
-----------------------------*/
-async function runAll() {
-  const out = document.getElementById("results");
-  out.innerHTML = "⏳ Analyzing...";
-
-  let total = 0;
-
-  let table = `
-    <table>
-      <tr>
-        <th>#</th>
-        <th>Article</th>
-        <th>Words</th>
-      </tr>
-  `;
-
-  for (let i = 0; i < pages.length; i++) {
-    const w = await countWords(pages[i].title);
-    pages[i].words = w;
-    total += w;
-
-    table += `
-      <tr>
-        <td>${i + 1}</td>
-        <td>${pages[i].title}</td>
-        <td>${w.toLocaleString()}</td>
-      </tr>
-    `;
-  }
-
-  table += "</table>";
-
-  const avg = pages.length ? Math.floor(total / pages.length) : 0;
-
-  out.innerHTML =
-    table +
-    `<br><b>Total:</b> ${total.toLocaleString()}<br>` +
-    `<b>Average:</b> ${avg.toLocaleString()}`;
-}
-
-/* init */
-render();
-
+var REPO="https://github.com/NotNahid/use/blob/main/",LIVE="https://notnahid.github.io/use/";
+var TOOLS=[["Data Utility","Bucks/index.html","Browser data helper"],["Wikipedia Smart Editor Pro","Wikipedia/index.html","Paste messy contest data, extract titles, analyze"],["GIF Maker","Image/both.html","Invert flasher and sequence builder"],["Invert GIF Maker","Image/making the gif.html","Turn an image into a flickering inverted GIF"],["Order Image GIF Maker","Image/order image.html","Build a GIF from images in your order"]];
+var F=[
+["PowerShell","Quick Utiltiy.ps1","Powershell/Quick Utiltiy.ps1","ps1","WinForms toolbox with a custom avatar icon","1,240 lines"],
+["PowerShell","yt-dlp app in powershell.ps1","yt-dlp app in powershell.ps1","ps1","GUI downloader for yt-dlp with history and config","1,380 lines"],
+["PowerShell","v2 of twinkly trey.ps1","Powershell/System Trey Apps/v2 of twinkly trey.ps1","ps1","Tray app that controls monitors over DDC/CI","1,672 lines"],
+["PowerShell","Twinky Trey but powershell.ps1","Powershell/System Trey Apps/Twinky Trey but powershell.ps1","ps1","First, smaller monitor tray app","346 lines"],
+["PowerShell","PowerShell code","PowerShell code","txt","Step-by-step breakdown of irm | iex","notes"],
+["Python","LiteWall.py","LiteWall.py","py","Windows live video wallpaper engine (VLC, CustomTkinter)","2,180 lines"],
+["Python","make text to voice with python.py","Python/make text to voice with python.py","py","Text-to-speech with google-genai and pydub","507 lines"],
+["Python","git_tool.py","Github/git_tool.py","py","Interactive GitHub helper for the terminal","397 lines"],
+["Wikipedia","Check Word Count of articles.py","Wikipedia/Check Word Count of articles.py","py","Compare article sizes across contest entrants","296 lines"],
+["Wikipedia","Just one count.py","Wikipedia/Just one count.py","py","Quick single-list word count checker","133 lines"],
+["Windows","Nahid.ahk","Nahid.ahk","ahk","AutoHotkey v2 hotkeys and launchers","813 lines"],
+["Windows","time.bat","time.bat","bat","Reset and repair the Windows Time service","admin"],
+["Windows","time-advanced.bat","time-advanced.bat","bat","Fix clock drift and set reliable NTP servers","admin"],
+["Windows","host_Files_over_cloudflare.bat","host_Files_over_cloudflare.bat","bat","Serve the current folder through a Cloudflare tunnel","winget"],
+["Windows","python host.txt","python host.txt","txt","Serve a drive or folder over HTTP and tunnel it","390 lines"],
+["Windows","Pranks/things.txt","Pranks/things.txt","txt","Harmless desktop pranks, mild to medium","list"],
+["Linux","Browser in Terminal.sh","Browser in Terminal.sh","sh","Install Firefox and Browsh for a terminal browser","script"],
+["Linux","term_To_gui.!!.txt","term_To_gui.!!.txt","txt","XFCE desktop over VNC with the dbus fix","44 lines"],
+["Linux","whisper cloudhell","whisper cloudhell","txt","Whisper speech-to-text setup and tool","427 lines"],
+["Linux","Linux Terminal Problems I find.txt","Linux Terminal Problems I find.txt","txt","Port killing, bulk delete, handy apt tools","notes"],
+["Linux","YouTube in Cloudshell","YouTube in Cloudshell/readme.md","md","Playwright Firefox setup and session script","js + md"],
+["Linux","Website_traffic_Terminal_command.txt","Website_traffic_Terminal_command.txt","txt","Playwright multi-session load simulator for your own site","86 lines"],
+["Remote PC","ds","Remote PC/ds","ps1","Permanent WinRM config for the target PC","admin"],
+["Remote PC","wake up","Remote PC/wake up","ps1","Wake-on-LAN magic packet sender","8 lines"],
+["Git","git_config.txt","git_config.txt","txt","Identity, init, remote and push cheat sheet","106 lines"],
+["Git","Setup_New_Github_in_Cloudshell.txt","Github/Setup_New_Github_in_Cloudshell.txt","txt","Install the git tool in a fresh Cloud Shell","246 lines"],
+["Git","git_push.txt","git_push.txt","txt","Clone, commit and push in five steps","notes"],
+["Links","shorten list","shorten list","txt","Script that scans short-link patterns for free ones","344 lines"],
+["Links","available_pattern_links.txt","available_pattern_links.txt","txt","Memorable patterns found free","list"],
+["Links","available_common_links.txt","available_common_links.txt","txt","317 free short links, dated 2026-02-07","list"],
+["Links","available_dub_links.txt","available_dub_links.txt","txt","Free dub.sh slugs","list"],
+["Links","available_ps_links.txt","available_ps_links.txt","txt","PowerShell-themed dub.sh slugs","list"],
+["Assets","ZZZTop.ttf","Fonts/ZZZTop.ttf","ttf","Display font","29 KB"],
+["Assets","Windows 11 cursor concept","Cursor Theme/windows_11_cursors_concept_by_jepricreations_densjkc.zip","zip","Cursor theme pack","557 KB"],
+["Assets","cursor-concept-3-free.zip","Cursor Theme/cursor-concept-3-free.zip","zip","Second cursor theme pack","654 KB"],
+["Assets","Bijoy avrolayout","Bijoy_by_technology_village.avrolayout","layout","Bijoy keyboard layout for Avro","2 MB"],
+["Assets","Bijoy Bayanno2011.zip","Bijoy Bayanno2011.zip","zip","Bijoy Bayanno 2011 package","5.4 MB"],
+["Assets","smtp_benchmark.rar","Mail/smtp_benchmark.rar","rar","SMTP benchmark archive","17.8 MB"]];
+var $=function(i){return document.getElementById(i)},cats=["All"],cur="All";
+F.forEach(function(f){if(cats.indexOf(f[0])<0)cats.push(f[0])});
+function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+/* files */
+function tree(){$("tree").innerHTML=cats.map(function(c){var n=c=="All"?F.length:F.filter(function(f){return f[0]==c}).length;return '<button type="button" aria-pressed="'+(c==cur)+'" data-c="'+esc(c)+'"><span>'+esc(c)+'</span><span>'+n+'</span></button>'}).join("")}
+function draw(){var q=$("q").value.toLowerCase();var r=F.filter(function(f){return(cur=="All"||f[0]==cur)&&f.join(" ").toLowerCase().indexOf(q)>-1});
+$("files").innerHTML=r.length?r.map(function(f){return '<a class="it" href="'+REPO+encodeURI(f[2])+'" target="_blank" rel="noopener"><span class="ico">'+esc(f[3])+'</span><span class="tx"><span class="nm">'+esc(f[1])+'</span><span class="ds"> '+esc(f[4])+'</span></span><span class="mt">'+esc(f[5])+'</span></a>'}).join(""):'<div class="empty">Nothing matches. Clear the search or pick another folder.</div>';
+$("cnt").textContent=r.length+" object(s)";$("cat").textContent="Folder: "+cur}
+$("tree").addEventListener("click",function(e){var b=e.target.closest("button");if(!b)return;cur=b.getAttribute("data-c");tree();draw()});
+$("q").addEventListener("input",draw);
+function setView(v){document.querySelector('input[name=v][value='+v+']').checked=true;$("files").classList.toggle("list",v=="l")}
+document.querySelectorAll("input[name=v]").forEach(function(r){r.addEventListener("change",function(){setView(r.value)})});
+tree();draw();
+/* live + stats */
+$("tiles").innerHTML=TOOLS.map(function(t){return '<a class="ti" href="'+LIVE+encodeURI(t[1])+'" target="_blank" rel="noopener"><svg><use href="#s-app"/></svg><b>'+esc(t[0])+'</b><small>'+esc(t[2])+'</small><span class="go">Open live</span></a>'}).join("");
+var counts=cats.slice(1).map(function(c){return[c,F.filter(function(f){return f[0]==c}).length]}),mx=Math.max.apply(null,counts.map(function(c){return c[1]}));
+$("graph").innerHTML=counts.map(function(c){return '<div class="bar"><i style="height:'+Math.round(c[1]/mx*100)+'%;--f:100%" title="'+c[1]+'"></i><span>'+esc(c[0])+'<br><b>'+c[1]+'</b></span></div>'}).join("");
+/* copy */
+$("copy").onclick=function(){var b=this;try{navigator.clipboard.writeText($("cmd").value).then(function(){b.textContent="Copied"},function(){$("cmd").select();b.textContent="Press Ctrl+C"})}catch(e){$("cmd").select();b.textContent="Press Ctrl+C"}setTimeout(function(){b.textContent="Copy"},1600)};
+/* windows */
+var z=10,wins=Array.prototype.slice.call(document.querySelectorAll(".win")),mobile=function(){return matchMedia("(max-width:760px)").matches};
+var titles={};wins.forEach(function(w){titles[w.id]=w.querySelector("h2").textContent;w.hidden=true});
+function tabs(){$("tabs").innerHTML=wins.filter(function(w){return!w.hidden}).map(function(w){return '<button class="btn" type="button" data-t="'+w.id+'" aria-pressed="'+(w.classList.contains("on")&&!w.classList.contains("min"))+'">'+esc(titles[w.id])+'</button>'}).join("")}
+function focusW(w){wins.forEach(function(x){x.classList.remove("on")});w.classList.add("on");w.style.zIndex=++z;tabs()}
+function openW(id){var w=$("w-"+id);w.hidden=false;w.classList.remove("min");focusW(w);$("start").classList.remove("open");$("startbtn").setAttribute("aria-expanded","false")}
+wins.forEach(function(w){
+ w.addEventListener("pointerdown",function(){if(!w.classList.contains("on"))focusW(w)});
+ w.addEventListener("click",function(e){var b=e.target.closest("[data-act]"),v=e.target.closest("[data-view]");
+  if(b){var a=b.getAttribute("data-act");if(a=="close"){w.hidden=true;w.classList.remove("on");tabs()}else if(a=="min"){w.classList.add("min");w.classList.remove("on");tabs()}else if(a=="max"){w.classList.toggle("max")}}
+  if(v)setView(v.getAttribute("data-view"));
+  var m=e.target.closest(".mn>button");document.querySelectorAll(".mn.open").forEach(function(x){if(!m||x!==m.parentNode)x.classList.remove("open")});if(m)m.parentNode.classList.toggle("open");else document.querySelectorAll(".mn.open").forEach(function(x){x.classList.remove("open")})});
+ var tb=w.querySelector(".tb"),sx,sy,ox,oy,d=false;
+ tb.addEventListener("pointerdown",function(e){if(e.target.closest("button")||mobile()||w.classList.contains("max"))return;d=true;sx=e.clientX;sy=e.clientY;ox=w.offsetLeft;oy=w.offsetTop;tb.setPointerCapture(e.pointerId);tb.style.cursor="grabbing"});
+ tb.addEventListener("pointermove",function(e){if(!d)return;w.style.left=Math.max(0,Math.min(innerWidth-120,ox+e.clientX-sx))+"px";w.style.top=Math.max(0,Math.min(innerHeight-130,oy+e.clientY-sy))+"px"});
+ tb.addEventListener("pointerup",function(){d=false;tb.style.cursor=""});
+});
+document.addEventListener("click",function(e){var o=e.target.closest("[data-open]");if(o)openW(o.getAttribute("data-open"));
+ var t=e.target.closest("[data-t]");if(t){var w=$(t.getAttribute("data-t"));if(w.classList.contains("on")&&!w.classList.contains("min")){w.classList.add("min");w.classList.remove("on");tabs()}else{w.classList.remove("min");focusW(w)}}
+ if(!e.target.closest("#start,#startbtn")){$("start").classList.remove("open");$("startbtn").setAttribute("aria-expanded","false")}});
+$("startbtn").onclick=function(){var s=$("start");s.classList.toggle("open");this.setAttribute("aria-expanded",s.classList.contains("open"))};
+document.addEventListener("keydown",function(e){if(e.key=="Escape"){$("start").classList.remove("open");document.querySelectorAll(".mn.open").forEach(function(x){x.classList.remove("open")})}});
+/* theme + clock */
+var rt=document.documentElement,pref=matchMedia("(prefers-color-scheme: dark)").matches;$("dark").checked=pref;
+$("dark").onchange=function(){rt.setAttribute("data-theme",this.checked?"dark":"light")};
+function clock(){$("clock").textContent=new Date().toLocaleTimeString([], {hour:"numeric",minute:"2-digit"})}clock();setInterval(clock,15000);
+openW("files");
 </script>
-
 </body>
 </html>
